@@ -16,10 +16,10 @@
 
 const User = require('../models/User.js'); 
 const Joi = require('joi');
-
+const uuid4 =  require("uuid4");
+const mongoose = require('mongoose');
 // Validation schema using Joi
 const userValidationSchema = Joi.object({
-  user_id: Joi.string().required(),
   username: Joi.string().required(),
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
@@ -37,14 +37,15 @@ const createUser = async (req, res) => {
   
   try {
     const { error } = userValidationSchema.validate(req.body);
-    const user_id = new Types.ObjectId();
+    const user_id = new mongoose.Types.ObjectId();
     if (error) {
       return res.status(400).json({ message: error.details[0].message });
     }
     const newUser = await User.create({ user_id, ...req.body });
+    //const newUser = await User.create(req.body);
     return res.status(201).json(newUser);
   } catch (err) {
-    return res.status(500).json(err);
+    return res.status(500).json(err.message);
   }
 };
 
