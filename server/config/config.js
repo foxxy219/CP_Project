@@ -9,10 +9,10 @@ const SERVER = {
   port: SERVER_PORT,
 };
 
-// //jwt
-// const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY || 'gofiberschedule';
-// //SECRET_PASSWORD
-// const SECRET_PASSWORD = process.env.SECRET_PASSWORD || '123456'
+//jwt
+const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY || 'cpproject';
+//SECRET_PASSWORD
+const SECRET_PASSWORD = process.env.SECRET_PASSWORD || '19119'
 
 
 // //role
@@ -27,17 +27,17 @@ const config = {
   },
   server: SERVER,
   
-//   auth: {
-//     jwtSecretKey: JWT_SECRET_KEY,
-//     secretPassword: SECRET_PASSWORD,  
-//   },
-//   role: {
-//     customer: CUSTOMER_ROLE,
-//     admin: ADMIN_ROLE,
-//   },
-//   crypto: {
-//     cryptoKey: CRYPTO_KEY,
-//   },
+  auth: {
+    jwtSecretKey: JWT_SECRET_KEY,
+    secretPassword: SECRET_PASSWORD,  
+  },
+  // role: {
+  //   customer: CUSTOMER_ROLE,
+  //   admin: ADMIN_ROLE,
+  // },
+  // crypto: {
+  //   cryptoKey: CRYPTO_KEY,
+  // },
 };
 
 module.exports = config;
