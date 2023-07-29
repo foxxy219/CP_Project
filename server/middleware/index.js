@@ -1,12 +1,12 @@
-import { NextFunction, Request, Response } from 'express';
+const { NextFunction, Request, Response } = require('express');
 
 const { verify: verifyToken } = require('jsonwebtoken');
 const config = require('../config');
 const userModel = require('../models/UserModel');
 const { compareSync } = require('bcryptjs');
-const { verifyToken } = require('../utils/auth'); // import verifyToken from '../utils/auth';
+const { verifyTokenCC } = require('../utils/Authen');
 
-export const authenticate = (req, res, next) => {
+const authenticate = (req, res, next) => {
   const authorization = req.headers['authorization'];
   if (!authorization) {
     return res.status(401).send({ message: 'No token provided' });
@@ -17,7 +17,7 @@ export const authenticate = (req, res, next) => {
     return res.status(401).send({ message: 'Invalid token format' });
   }
 
-  verifyToken(
+  verifyTokenCC(
     JSON.parse(token),
     config.auth.jwtSecretKey,
     null,
@@ -34,8 +34,10 @@ export const authenticate = (req, res, next) => {
   );
 };
 
-export const errorHandler = (error, request, response, next) => {
-    console.log(`error ${error.message}`)
-    const status = error.status || 400
-    return response.status(status).send(error.message)
-  }
+const errorHandler = (error, request, response, next) => {
+  console.log(`error ${error.message}`)
+  const status = error.status || 400
+  return response.status(status).send(error.message)
+}
+
+module.exports = { authenticate, errorHandler };

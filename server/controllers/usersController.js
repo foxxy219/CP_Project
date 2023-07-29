@@ -11,7 +11,7 @@
 // import { AuthRequest } from '../interfaces';
 // import axios from 'axios';
 // import { v4 as uuidv4 } from 'uuid';
-//const bcrypt = require('bcryptjs');
+const bcrypt = require('bcryptjs');
 const User = require('../models/UserModel.js'); 
 const Joi = require('joi');
 const uuid4 =  require("uuid4");
@@ -130,7 +130,7 @@ class UserController {
       }
       const salt = genSaltSync(Number(process.env.SALT_ROUND || 10));
       const checkPassword = bcrypt.compareSync(req.body.password, checkExist.password);
-      const hash = hashSync(req.body.password, salt);
+      const hash = bcrypt.hashSync(req.body.password, salt);
       await userModel.findByIdAndUpdate(req.user?._id, { password: hash });
       if (!checkPassword) {
         throw new Error('Sai mật khẩu');
@@ -158,9 +158,14 @@ class UserController {
           'string.max': 'Mật khẩu tối đa là 32 chữ',
         }),
         email: Joi.string().email().max(32).required().messages({
-          'string.empty': 'Eamil không được để trống',
+          'string.empty': 'Email không được để trống',
           'string.email': 'Email không đúng định dạng',
           'string.max': 'Email tối đa là 32 chữ',
+        }),
+        userId: Joi.string().required().max(6).min(3).messages({
+          'string.empty': 'UserId không được để trống',
+          'string.min': 'UserId phải có tối thiểu 3 chữ',
+          'string.max': 'UserId phải có tối thiểu 6 chữ',
         }),
       });
       const validate = schema.validate(req.body);
@@ -196,6 +201,136 @@ class UserController {
       return res.status(200).json(response);
     } catch (error) {
       next(error);
+    }
+  }
+  async loginWithGoogle(req, res, next) {
+    try {
+      const { tokenId } = req.body;
+      const verifyToken = await axios({
+        method: 'GET',
+        url: `https://oauth2.googleapis.com/tokeninfo?id_token=${tokenId}`,
+        withCredentials: true,
+      });
+      if (verifyToken.status === 200) {
+        const { email_verified, email, name, picture } = verifyToken.data;
+        const checkValidEmail = await userModel.findOne({ email: email });
+        const salt = genSaltSync(Number(process.env.SALT_ROUND || 10));
+        const hash = hashSync(config.auth.secretPassword, salt);
+        if (!checkValidEmail) {
+          const newUser = await userModel.create({
+            username: name,
+            email: email,
+            avatar: picture,
+            password: hash,
+            provider: 'google',
+          });
+          const { password, ...returnUser } = newUser;
+
+          const accessToken = jwt.sign(
+            { id: newUser.id ? newUser.id : newUser._id },
+            config.auth.jwtSecretKey,
+            { expiresIn: '1d' }
+          );
+
+          const response = {
+            message: 'Tạo tài khoản thành công',
+            status: RESPONSE_STATUS.SUCCESS,
+            user: { ...returnUser?._doc },
+            accessToken,
+          };
+          return res.status(200).json(response);
+        } else {
+          const user = await userModel.findOne({ email: email });
+          const { password, ...returnUser } = user;
+          const accessToken = jwt.sign(
+            { id: user.id ? user.id : user._id },
+            config.auth.jwtSecretKey,
+            { expiresIn: '1d' }
+          );
+          const response = {
+            message: 'Đăng nhập thành công',
+            status: RESPONSE_STATUS.SUCCESS,
+            user: { ...returnUser?._doc },
+            accessToken,
+          };
+          return res.status(200).json(response);
+        }
+      } else {
+        const response = {
+          message: 'Token không lệ ',
+          status: RESPONSE_STATUS.FAILED,
+          user: null,
+        };
+        return res.status(200).json(response);
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+  async updateProfile(req, res, next) {
+    try {
+      const schema = Joi.object({
+        username: Joi.string()
+          .required()
+          .max(32)
+          .min(6)
+          .messages({
+            'string.empty': 'Tên người dùng không được để trống',
+            'string.min': 'Tên người dùng phải có tối thiểu 6 chữ',
+            'string.max': 'Tên người dùng tối đa là 32 chữ',
+          }),
+        email: Joi.string()
+          .email()
+          .max(32)
+          .required()
+          .messages({
+            'string.empty': 'Eamil không được để trống',
+            'string.email': 'Email không đúng định dạng',
+            'string.max': 'Email tối đa là 32 chữ',
+          }),
+        cmnd: Joi.string().required().max(12).min(9).messages({
+          'string.empty': 'CMND không được để trống',
+          'string.min': 'CMND phải có tối thiểu 9 chữ',
+          'string.max': 'CMND tối đa là 12 chữ',
+        }),
+        phone: Joi.string().required().max(12).min(9).messages({
+          'string.empty': 'Số điện thoại không được để trống',
+          'string.min': 'Số điện thoại phải có tối thiểu 9 chữ',
+          'string.max': 'Số điện thoại tối đa là 12 chữ',
+        }),
+      }).unknown(true);
+
+      const validate = schema.validate(req.body);
+      if (validate.error) {
+        throw new Error(validate.error.message);
+      }
+      const finalBody = { ...req.body, isActivated: true };
+      const findUser = userModel.findById(req.user?._id);
+      if (!findUser) {
+        throw new Error('Không tìm thấy người dùng');
+      }
+      const genId = uuidv4();
+      if (req.files?.avatar) {
+        const avatar = req.files?.avatar;
+        avatar.mv(`./public/images/${genId}`, function (err) {
+          if (err) {
+            throw new Error('Lỗi tải ảnh');
+          }
+        });
+        req.body.avatar = genId;
+      }
+      const updateUser = await userModel.findByIdAndUpdate(
+        req.user?._id,
+        finalBody
+      );
+      const response = {
+        message: 'Cập nhật thành công',
+        status: RESPONSE_STATUS.SUCCESS,
+        user: { ...updateUser?._doc },
+      };
+      return res.status(200).json(response);
+    } catch (err) {
+      next(err);
     }
   }
 }
