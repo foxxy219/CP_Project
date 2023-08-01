@@ -17,7 +17,7 @@ const Joi = require('joi');
 const uuid4 =  require("uuid4");
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
-const secret_key = require('../config/index.js').auth.jwtSecretKey;
+const config = require('../config/index.js');
 
 const saltRounds = 10; // For bcrypt
 
@@ -37,6 +37,15 @@ const changePasswordSchema = Joi.object({
   confirmNewPassword: Joi.string().required().valid(Joi.ref('newPassword')),
 });
 
+// Validation schema for signup
+const signupSchema = Joi.object({
+  username: Joi.string().required(),
+  email: Joi.string().email().required(),
+  password: Joi.string().required(),
+  full_name: Joi.string(),
+  date_of_birth: Joi.date(),
+  credential_id: Joi.number().required(),
+}, { timestamps: true });
 // Login function
   // async function login(req, res) {
   //   try {
@@ -61,7 +70,7 @@ const changePasswordSchema = Joi.object({
   //     }
   
   //     // Generate a JWT token for authentication
-  //     const token = jwt.sign({ userId: user._id }, secret_key); // Replace 'your_secret_key' with your actual secret key
+  //     const token = jwt.sign({ userId: user._id }, config.auth.jwtSecretKey); // Replace 'your_config.auth.jwtSecretKey' with your actual secret key
   
   //     // Send the token in the response
   //     res.json({ token });
@@ -94,10 +103,15 @@ const changePasswordSchema = Joi.object({
     }
 
     // Generate a JWT token for authentication
-    const token = jwt.sign({ userId: user._id }, secret_key); // Replace 'your_secret_key' with your actual secret key
+    const token = jwt.sign({ userId: user._id }, config.auth.jwtSecretKey); // Replace 'your_config.auth.jwtSecretKey' with your actual secret key
 
     // Send the token in the response
-    res.json({ token });
+    const response = {
+        message: 'Login Success',
+        status: RESPONSE_STATUS.SUCCESS,
+        token,
+      };
+    return res.status(200).json(response);
   } catch (err) {
     console.error('Error in login:', err);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -146,6 +160,52 @@ async function changePassword(req, res) {
 }
 
 
+const Test_signup = async (req, res) => {
+  try {
+    const validate = signupSchema.validate(req.body);
+    if (validate.error) {
+      return res.status(400).json({ error: validate.error.details[0].message });
+    }
+    const salt = bcrypt.genSaltSync(10);
+    const hash = bcrypt.hashSync(req.body.password, salt);
+    const user_id = uuid4();
+    
+    
+    const checkIfMailExist = await User.emailExist(req.body.email);
+    if (checkIfMailExist) {
+      return res.status(400).json({ error: 'Email already exist' });
+    }
+    const checkIfUsernameExist = await User.usernameExist(req.body.username);
+    if (checkIfUsernameExist) {
+      return res.status(400).json({ error: 'Username already exist' });
+    }
+
+    const newUser = await User.create({ user_id, ...req.body, password: hash });
+    const { password, ...returnUser } = newUser;
+
+    const accessToken = jwt.sign(
+      { id: newUser.id ? newUser.id : newUser._id },
+      config.auth.jwtSecretKey,
+      { expiresIn: '1d' }
+    );
+
+    // Send the token in the response
+    const response = {
+      message: 'Signup Success',
+      status: RESPONSE_STATUS.SUCCESS,
+      user: { ...returnUser?._doc },
+      accessToken,
+    };
+    return res.status(200).json(response);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  };
+};
+
+  
+
+
 
 
 module.exports = {
@@ -153,309 +213,4 @@ module.exports = {
   changePassword,
 };
 
-// // Create a new user
-// const createUser = async (req, res) => {
-  
-//   try {
-//     const { error } = userValidationSchema.validate(req.body);
-//     const user_id = new mongoose.Types.ObjectId();
-//     if (error) {
-//       return res.status(400).json({ message: error.details[0].message });
-//     }
-//     const newUser = await User.create({ user_id, ...req.body });
-//     //const newUser = await User.create(req.body);
-//     return res.status(201).json(newUser);
-//   } catch (err) {
-//     return res.status(500).json(err.message);
-//   }
-// };
-
-// class UserController {
-//   async login(req, res, next) {
-//     try {
-//       const schema = Joi.object({
-//         password: joi.string().required().max(32).min(6).messages({
-//           'string.empty': 'Mật khẩu không được để trống',
-//           'string.min': 'Mật khẩu phải có tối thiểu 6 chữ',
-//           'string.max': 'Mật khẩu tối đa là 32 chữ',
-//         }),
-//         email: joi.string().email().max(32).required().messages({
-//           'string.empty': 'Eamil không được để trống',
-//           'string.email': 'Email không đúng định dạng',
-//           'string.max': 'Email tối đa là 32 chữ',
-//         }),
-//       });
-//       const validate = schema.validate(req.body);
-//       if (validate.error) {
-//         throw new Error(validate.error.message);
-//       }
-//       const checkExist = await userModel
-//         .findOne({ email: req.body.email })
-//         .populate('role')
-//         .lean();
-//       if (!checkExist) {
-//         throw new Error('User does not exist');
-//       }
-//       const checkPassword = bcrypt.compareSync(req.body.password, checkExist.password);
-//       if (!checkPassword) {
-//         throw new Error('Sai mật khẩu');
-//       }
-//       const userAbility = [];
-//       const accessToken = jwt.sign(
-//         { id: checkExist._id ? checkExist._id : checkExist.id },
-//         config.auth.jwtSecretKey,
-//         { expiresIn: '1d' }
-//       );
-//       const refreshTokens = jwt.sign(
-//         { id: checkExist.id ? checkExist.id : checkExist._id },
-//         config.auth.jwtSecretKey,
-//         { expiresIn: '1d' }
-//       );
-//       const { password, ...returnUser } = checkExist;
-   
-//       const response = {
-//         message: 'Đăng nhập thành công',
-//         status: RESPONSE_STATUS.SUCCESS,
-//         user: { ...returnUser, ability: userAbility },
-//         accessToken,
-//         refreshToken: refreshTokens,
-//       };
-//       return res.status(200).json(response);
-//     } catch (error) {
-//       next(error);
-//     }
-//   }
-//   async changePassword(req, res, next) {
-//     try {
-//       const schema = Joi.object({
-//         password: Joi.string().required().max(32).min(6).messages({
-//           'string.empty': 'Mật khẩu không được để trống',
-//           'string.min': 'Mật khẩu phải có tối thiểu 6 chữ',
-//           'string.max': 'Mật khẩu tối đa là 32 chữ',
-//         }),
-//         newPassword: Joi.string().required().max(32).required().messages({
-//           'string.empty': 'Eamil không được để trống',
-//           'string.min': 'Mật khẩu mới  phải có tối thiểu 6 chữ',
-//           'string.max': 'Mật khẩu mới tối đa là 32 chữ',
-//         }),
-//       });
-//       const validate = schema.validate(req.body);
-//       const checkExist = await userModel
-//         .findById(req.user?._id)
-//         .populate('role')
-//         .lean();
-//       if (!checkExist) {
-//         throw new Error('User does not exist');
-//       }
-//       if (validate.error) {
-//         throw new Error(validate.error.message);
-//       }
-//       const salt = genSaltSync(Number(process.env.SALT_ROUND || 10));
-//       const checkPassword = bcrypt.compareSync(req.body.password, checkExist.password);
-//       const hash = bcrypt.hashSync(req.body.password, salt);
-//       await userModel.findByIdAndUpdate(req.user?._id, { password: hash });
-//       if (!checkPassword) {
-//         throw new Error('Sai mật khẩu');
-//       }
-//       const response = {
-//         message: 'Tạo tài khoản thành công',
-//         status: RESPONSE_STATUS.SUCCESS,
-//       };
-//       return res.status(200).json(response);
-//     } catch (error) {
-//       next(error);
-//     }
-//   }
-//   async signUp(req, res, next) {
-//     try {
-//       const schema = Joi.object({
-//         username: Joi.string().required().max(32).min(6).messages({
-//           'string.empty': 'Tên người dùng không được để trống',
-//           'string.min': 'Tên người dùng phải có tối thiểu 6 chữ',
-//           'string.max': 'Tên người dùng tối đa là 32 chữ',
-//         }),
-//         password: Joi.string().required().max(32).min(6).messages({
-//           'string.empty': 'Mật khẩu không được để trống',
-//           'string.min': 'Mật khẩu phải có tối thiểu 6 chữ',
-//           'string.max': 'Mật khẩu tối đa là 32 chữ',
-//         }),
-//         email: Joi.string().email().max(32).required().messages({
-//           'string.empty': 'Email không được để trống',
-//           'string.email': 'Email không đúng định dạng',
-//           'string.max': 'Email tối đa là 32 chữ',
-//         }),
-//         userId: Joi.string().required().max(6).min(3).messages({
-//           'string.empty': 'UserId không được để trống',
-//           'string.min': 'UserId phải có tối thiểu 3 chữ',
-//           'string.max': 'UserId phải có tối thiểu 6 chữ',
-//         }),
-//       });
-//       const validate = schema.validate(req.body);
-//       if (validate.error) {
-//         throw new Error(validate.error.message);
-//       }
-//       const salt = genSaltSync(Number(process.env.SALT_ROUND || 10));
-//       const hash = hashSync(req.body.password, salt);
-//       const checkExistEmail = await userModel.find({
-//         email: req.body.email,
-//       });
-//       if (checkExistEmail.length > 0) {
-//         throw new Error('Email đã tồn tại');
-//       }
-//       const newUser = await userModel.create({
-//         username: req.body.username,
-//         email: req.body.email,
-//         password: hash,
-//         provider: 'local',
-//       });
-//       const { password, ...returnUser } = newUser;
-//       const accessToken = jwt.sign(
-//         { id: newUser.id ? newUser.id : newUser._id },
-//         config.auth.jwtSecretKey,
-//         { expiresIn: '1d' }
-//       );
-//       const response = {
-//         message: 'Tạo tài khoản thành công',
-//         status: RESPONSE_STATUS.SUCCESS,
-//         user: { ...returnUser?._doc },
-//         accessToken,
-//       };
-//       return res.status(200).json(response);
-//     } catch (error) {
-//       next(error);
-//     }
-//   }
-//   async loginWithGoogle(req, res, next) {
-//     try {
-//       const { tokenId } = req.body;
-//       const verifyToken = await axios({
-//         method: 'GET',
-//         url: `https://oauth2.googleapis.com/tokeninfo?id_token=${tokenId}`,
-//         withCredentials: true,
-//       });
-//       if (verifyToken.status === 200) {
-//         const { email_verified, email, name, picture } = verifyToken.data;
-//         const checkValidEmail = await userModel.findOne({ email: email });
-//         const salt = genSaltSync(Number(process.env.SALT_ROUND || 10));
-//         const hash = hashSync(config.auth.secretPassword, salt);
-//         if (!checkValidEmail) {
-//           const newUser = await userModel.create({
-//             username: name,
-//             email: email,
-//             avatar: picture,
-//             password: hash,
-//             provider: 'google',
-//           });
-//           const { password, ...returnUser } = newUser;
-
-//           const accessToken = jwt.sign(
-//             { id: newUser.id ? newUser.id : newUser._id },
-//             config.auth.jwtSecretKey,
-//             { expiresIn: '1d' }
-//           );
-
-//           const response = {
-//             message: 'Tạo tài khoản thành công',
-//             status: RESPONSE_STATUS.SUCCESS,
-//             user: { ...returnUser?._doc },
-//             accessToken,
-//           };
-//           return res.status(200).json(response);
-//         } else {
-//           const user = await userModel.findOne({ email: email });
-//           const { password, ...returnUser } = user;
-//           const accessToken = jwt.sign(
-//             { id: user.id ? user.id : user._id },
-//             config.auth.jwtSecretKey,
-//             { expiresIn: '1d' }
-//           );
-//           const response = {
-//             message: 'Đăng nhập thành công',
-//             status: RESPONSE_STATUS.SUCCESS,
-//             user: { ...returnUser?._doc },
-//             accessToken,
-//           };
-//           return res.status(200).json(response);
-//         }
-//       } else {
-//         const response = {
-//           message: 'Token không lệ ',
-//           status: RESPONSE_STATUS.FAILED,
-//           user: null,
-//         };
-//         return res.status(200).json(response);
-//       }
-//     } catch (error) {
-//       next(error);
-//     }
-//   }
-//   async updateProfile(req, res, next) {
-//     try {
-//       const schema = Joi.object({
-//         username: Joi.string()
-//           .required()
-//           .max(32)
-//           .min(6)
-//           .messages({
-//             'string.empty': 'Tên người dùng không được để trống',
-//             'string.min': 'Tên người dùng phải có tối thiểu 6 chữ',
-//             'string.max': 'Tên người dùng tối đa là 32 chữ',
-//           }),
-//         email: Joi.string()
-//           .email()
-//           .max(32)
-//           .required()
-//           .messages({
-//             'string.empty': 'Eamil không được để trống',
-//             'string.email': 'Email không đúng định dạng',
-//             'string.max': 'Email tối đa là 32 chữ',
-//           }),
-//         cmnd: Joi.string().required().max(12).min(9).messages({
-//           'string.empty': 'CMND không được để trống',
-//           'string.min': 'CMND phải có tối thiểu 9 chữ',
-//           'string.max': 'CMND tối đa là 12 chữ',
-//         }),
-//         phone: Joi.string().required().max(12).min(9).messages({
-//           'string.empty': 'Số điện thoại không được để trống',
-//           'string.min': 'Số điện thoại phải có tối thiểu 9 chữ',
-//           'string.max': 'Số điện thoại tối đa là 12 chữ',
-//         }),
-//       }).unknown(true);
-
-//       const validate = schema.validate(req.body);
-//       if (validate.error) {
-//         throw new Error(validate.error.message);
-//       }
-//       const finalBody = { ...req.body, isActivated: true };
-//       const findUser = userModel.findById(req.user?._id);
-//       if (!findUser) {
-//         throw new Error('Không tìm thấy người dùng');
-//       }
-//       const genId = uuidv4();
-//       if (req.files?.avatar) {
-//         const avatar = req.files?.avatar;
-//         avatar.mv(`./public/images/${genId}`, function (err) {
-//           if (err) {
-//             throw new Error('Lỗi tải ảnh');
-//           }
-//         });
-//         req.body.avatar = genId;
-//       }
-//       const updateUser = await userModel.findByIdAndUpdate(
-//         req.user?._id,
-//         finalBody
-//       );
-//       const response = {
-//         message: 'Cập nhật thành công',
-//         status: RESPONSE_STATUS.SUCCESS,
-//         user: { ...updateUser?._doc },
-//       };
-//       return res.status(200).json(response);
-//     } catch (err) {
-//       next(err);
-//     }
-//   }
-// }
-
-// module.exports = { login, changePassword };
 
