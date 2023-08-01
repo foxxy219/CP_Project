@@ -38,38 +38,38 @@ const changePasswordSchema = Joi.object({
 });
 
 // Login function
-  async function login(req, res) {
-    try {
-      // Validate the request body
-      const { error, value } = loginSchema.validate(req.body);
-      if (error) {
-        return res.status(400).json({ error: error.details[0].message });
-      }
+  // async function login(req, res) {
+  //   try {
+  //     // Validate the request body
+  //     const { error, value } = loginSchema.validate(req.body);
+  //     if (error) {
+  //       return res.status(400).json({ error: error.details[0].message });
+  //     }
   
-      const { email, password } = value;
+  //     const { email, password } = value;
   
-      // Find the user by email in the database
-      const user = await User.findOne({ email });
-      if (!user) {
-        return res.status(404).json({ error: 'User not found' });
-      }
+  //     // Find the user by email in the database
+  //     const user = await User.findOne({ email });
+  //     if (!user) {
+  //       return res.status(404).json({ error: 'User not found' });
+  //     }
   
-      // Check if the password matches
-      const passwordMatch = await bcrypt.compare(password, user.password);
-      if (!passwordMatch) {
-        return res.status(401).json({ error: 'Invalid password' });
-      }
+  //     // Check if the password matches
+  //     const passwordMatch = await bcrypt.compare(password, user.password);
+  //     if (!passwordMatch) {
+  //       return res.status(401).json({ error: 'Invalid password' });
+  //     }
   
-      // Generate a JWT token for authentication
-      const token = jwt.sign({ userId: user._id }, secret_key); // Replace 'your_secret_key' with your actual secret key
+  //     // Generate a JWT token for authentication
+  //     const token = jwt.sign({ userId: user._id }, secret_key); // Replace 'your_secret_key' with your actual secret key
   
-      // Send the token in the response
-      res.json({ token });
-    } catch (err) {
-      console.error('Error in login:', err);
-      res.status(500).json(err);
-    }
-  }
+  //     // Send the token in the response
+  //     res.json({ token });
+  //   } catch (err) {
+  //     console.error('Error in login:', err);
+  //     res.status(500).json(err);
+  //   }
+  // }
 
   async function login(req, res) {
   try {
