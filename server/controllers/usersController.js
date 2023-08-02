@@ -170,36 +170,36 @@ const Test_signup = async (req, res) => {
     const hash = bcrypt.hashSync(req.body.password, salt);
     const user_id = uuid4();
     
-    
-    const checkIfMailExist = await User.emailExist(req.body.email);
-    if (checkIfMailExist) {
-      return res.status(400).json({ error: 'Email already exist' });
+    //Check for existed email and username
+    const checkExistEmail = await User.find({ email: req.body.email });
+    if (checkExistEmail.length > 0) {
+      throw new Error('Email existed');
     }
-    const checkIfUsernameExist = await User.usernameExist(req.body.username);
-    if (checkIfUsernameExist) {
-      return res.status(400).json({ error: 'Username already exist' });
+    const checkExistUsername = await User.find({ username: req.body.username });
+    if (checkExistUsername.length > 0) {
+      throw new Error('Username existed');
     }
 
+    // Create a new user
     const newUser = await User.create({ user_id, ...req.body, password: hash });
     const { password, ...returnUser } = newUser;
-
+    // Generate a JWT token for authentication
     const accessToken = jwt.sign(
       { id: newUser.id ? newUser.id : newUser._id },
       config.auth.jwtSecretKey,
       { expiresIn: '1d' }
     );
-
     // Send the token in the response
     const response = {
       message: 'Signup Success',
-      status: RESPONSE_STATUS.SUCCESS,
+      status: true,
       user: { ...returnUser?._doc },
       accessToken,
     };
     return res.status(200).json(response);
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ error: 'Internal Server Error' });
+    return res.status(500).json(error);
   };
 };
 
@@ -211,6 +211,7 @@ const Test_signup = async (req, res) => {
 module.exports = {
   login,
   changePassword,
+  Test_signup,
 };
 
 
