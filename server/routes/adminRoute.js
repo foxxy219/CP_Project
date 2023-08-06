@@ -5,7 +5,9 @@ const { authenticate } = require('../middleware');
 // Route for creating a new user
 // router.post('/users', userController.createUser);
 router.post('/register',authenticate,  adminController.registerForNewUser);
-// router.post('/delete-user', authenticate, adminController.deleteUser);
+router.post('/deactive-user', authenticate, adminController.DeactivateUser);
+router.post('/active-user', authenticate, adminController.ActivateUser);
 // router.post('/check-user-information', authenticate, adminController.checkUserInformation);
+router.post('/change-role', authenticate, adminController.changeUserRole);
 
 module.exports = router;

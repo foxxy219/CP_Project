@@ -42,7 +42,7 @@ db.on('error', (error) => {
     console.error('MongoDB connection error:', error);
 });
 app.use('/api/user', userRoutes);
-// app.use("/api/admin", require(adminRoutes));
+app.use('/api/admin', adminRoutes);
 var server = http.createServer(app)
 
 

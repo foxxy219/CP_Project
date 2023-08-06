@@ -97,7 +97,7 @@ async function login(req, res) {
     // Find the user by email in the database
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ error: 'User not found' } + err);
+      return res.status(404).json({ error: 'User not found' });
     }
 
     // Check if the password matches
@@ -179,11 +179,13 @@ const Test_signup = async (req, res) => {
     //Check for existed email and username
     const checkExistEmail = await User.find({ email: req.body.email });
     if (checkExistEmail.length > 0) {
-      throw new Error('Email existed');
+      console.log("Email existed");
+      return res.status(400).json({ error: 'Email existed' });
     }
     const checkExistUsername = await User.find({ username: req.body.username });
     if (checkExistUsername.length > 0) {
-      throw new Error('Username existed');
+      console.log("Username existed");
+      return res.status(400).json({ error: 'Username existed' });
     }
 
     // Create a new user
@@ -213,25 +215,6 @@ const Test_signup = async (req, res) => {
 
 
 
-
-
-// // Assuming you have the JWT token stored in a variable named 'accessToken'
-// const currentUser = getCurrentUserFromToken(token);
-// if (currentUser) {
-//   const userInDB = await User.findOne({ _id: currentUser.userId });
-//   if (!userInDB) {
-//     return res.status(404).json({ error: 'User not found' });
-//   }
-//   else {
-//     console.log('Current user ID:', userInDB.user_id);
-//     console.log('Current user email:', userInDB.email);
-//     console.log('Current user :', userInDB);
-//     // Access other user information as needed
-//   }
-// } else {
-//   console.log('Invalid or expired token. Please re-authenticate.');
-// }
-
 async function getCurrentUser(req, res) {
   try {
 
@@ -239,7 +222,6 @@ async function getCurrentUser(req, res) {
     // const token = req.headers.authorization.split(' ')[1];
     // const currentUser = getCurrentUserFromToken(token);
     const currentUser = req.user;
-    console.log("Current user:", currentUser);
       if (!currentUser) {
         return res.status(404).json({ error: "User not found" });
       } else {  

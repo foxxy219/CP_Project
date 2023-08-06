@@ -23,20 +23,20 @@ const signupSchema = Joi.object({
     contact_phone: Joi.string(),
     role: Joi.string(),
     credential_id: Joi.number().required(),
+    isActivated: Joi.boolean(),
 }, { timestamps: true });
 
-
+const changeRoleSchema = Joi.object({
+    user_id: Joi.string().required(),
+    role: Joi.string().required(),
+});
 
 
 const registerForNewUser = async (req, res) => {
     try {
-        const token = req.headers.authorization.split(' ')[1];
-        const currentUser = getCurrentUserFromToken(token);
-        const userInDB = await User.findOne({ user_id: currentUser.id });
-
+        const currentUser = req.user;
         // Check if the current user is an admin
-        const role = userInDB.role;
-        if (role !== 'admin') {
+        if (currentUser.role !== 'admin') {
             return res.status(403).send('You are not authorized to register a new user');
         }
 
@@ -67,6 +67,7 @@ const registerForNewUser = async (req, res) => {
             contact_phone: value.contact_phone,
             role: value.role || 'user', // Assign 'user' role if not provided (optional)
             credential_id: value.credential_id,
+            isActivated: value || false,
         });
 
         // Save the new user to the database
@@ -79,27 +80,92 @@ const registerForNewUser = async (req, res) => {
     }
 };
 
+const changeUserRole = async (req, res) => {
+    try {
+        const currentUser = req.user;
+        // Check if the current user is an admin
+        if (currentUser.role !== 'admin') {
+            return res.status(403).send('You are not authorized to change user role');
+        }
+        //Find all user
+        const users = await User.find();
+        //Get user_id and role from request body
+        const { user_id, role } = req.body;
+        //Check if user_id is existed
+        const user = users.find(user => user.user_id === user_id);
+        if (!user) {
+            return res.status(404).send('User not found');
+        }
+        //Validate role
+        const { error, value } = changeRoleSchema.validate(req.body);
+        if (error) {
+            return res.status(400).send(error.details[0].message);
+        }
+        //Update role
+        user.role = role;
+        await user.save();
+        return res.status(200).json({ message: 'User role changed successfully' });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send('Internal Server Error');
 
-// const deleteUser = async (req, res) => {
-//     try {
-//         // Check if the current user is an admin
-//         const role = req.user.role;
-//         if (role !== 'admin') {
-//             return res.status(403).send('You are not authorized to delete a user');
-//         }
+            
+        }
+    }
 
-//         // Get the user_id from the request body
-//         const { user_id } = req.body;
+const DeactivateUser = async (req, res) => {
+    try {
+        // Check if the current user is an admin
+        const currentUser = req.user;
+        if (currentUser.role !== 'admin') {
+            return res.status(403).send('You are not authorized to delete a user');
+        }
 
-//         // Delete the user from the database
-//         await User.deleteOne({ user_id });
+        //check for user exist or not
+        const users = await User.find();
+        const { user_id } = req.body;
+        const user = users.find(user => user.user_id === user_id);
+        if (!user) {
+            return res.status(404).send('User not found');
+        }
 
-//         return res.status(200).json({ message: 'User deleted successfully' });
-//     } catch (error) {
-//         console.error(error);
-//         return res.status(500).send('Internal Server Error');
-//     }
-// }
+        //Deactive user
+        user.isActivated = false;
+        await user.save();
+
+        return res.status(200).json({ message: 'User deactived successfully' });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send('Internal Server Error');
+    }
+}
+
+const ActivateUser = async (req, res) => {
+    try {
+        // Check if the current user is an admin
+        const currentUser = req.user;
+        if (currentUser.role !== 'admin') {
+            return res.status(403).send('You are not authorized to delete a user');
+        }
+
+        //check for user exist or not
+        const users = await User.find();
+        const { user_id } = req.body;
+        const user = users.find(user => user.user_id === user_id);
+        if (!user) {
+            return res.status(404).send('User not found');
+        }
+
+        //Deactive user
+        user.isActivated = true;
+        await user.save();
+
+        return res.status(200).json({ message: 'User activated successfully' });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send('Internal Server Error');
+    }
+}
 
 // const checkUserInformation = async (req, res) => { 
 //     try {
@@ -132,6 +198,8 @@ const registerForNewUser = async (req, res) => {
 
 module.exports = {
     registerForNewUser,
-    // deleteUser,
+    DeactivateUser,
+    ActivateUser,
     // checkUserInformation,
+    changeUserRole,
 };
