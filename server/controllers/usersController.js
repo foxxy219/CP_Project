@@ -12,22 +12,26 @@
 // import axios from 'axios';
 // import { v4 as uuidv4 } from 'uuid';
 const bcrypt = require('bcryptjs');
-const User = require('../models/UserModel.js'); 
+const User = require('../models/UserModel.js');
+const UserCredential = require('../models/HW_UserCredentialDataModel.js');
 const Joi = require('joi');
-const uuid4 =  require("uuid4");
+const uuid4 = require("uuid4");
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const config = require('../config/index.js');
-
+const { expirationTimestamp } = require('../utils/ExpiredTime.js');
+const { getCurrentUserFromToken } = require('../middleware/index.js');
 const saltRounds = 10; // For bcrypt
 
 // Validation schema for login
 const loginSchema = Joi.object({
   email: Joi.string().email().required().messages({
     'string.empty': 'Please provide Email',
-    'string.email': 'Please input correct format of Email',}),
+    'string.email': 'Please input correct format of Email',
+  }),
   password: Joi.string().required().messages({
-    'string.empty': 'Please input right password',})
+    'string.empty': 'Please input right password',
+  })
 });
 
 // Validation schema for change password
@@ -47,40 +51,40 @@ const signupSchema = Joi.object({
   credential_id: Joi.number().required(),
 }, { timestamps: true });
 // Login function
-  // async function login(req, res) {
-  //   try {
-  //     // Validate the request body
-  //     const { error, value } = loginSchema.validate(req.body);
-  //     if (error) {
-  //       return res.status(400).json({ error: error.details[0].message });
-  //     }
-  
-  //     const { email, password } = value;
-  
-  //     // Find the user by email in the database
-  //     const user = await User.findOne({ email });
-  //     if (!user) {
-  //       return res.status(404).json({ error: 'User not found' });
-  //     }
-  
-  //     // Check if the password matches
-  //     const passwordMatch = await bcrypt.compare(password, user.password);
-  //     if (!passwordMatch) {
-  //       return res.status(401).json({ error: 'Invalid password' });
-  //     }
-  
-  //     // Generate a JWT token for authentication
-  //     const token = jwt.sign({ userId: user._id }, config.auth.jwtSecretKey); // Replace 'your_config.auth.jwtSecretKey' with your actual secret key
-  
-  //     // Send the token in the response
-  //     res.json({ token });
-  //   } catch (err) {
-  //     console.error('Error in login:', err);
-  //     res.status(500).json(err);
-  //   }
-  // }
+// async function login(req, res) {
+//   try {
+//     // Validate the request body
+//     const { error, value } = loginSchema.validate(req.body);
+//     if (error) {
+//       return res.status(400).json({ error: error.details[0].message });
+//     }
 
-  async function login(req, res) {
+//     const { email, password } = value;
+
+//     // Find the user by email in the database
+//     const user = await User.findOne({ email });
+//     if (!user) {
+//       return res.status(404).json({ error: 'User not found' });
+//     }
+
+//     // Check if the password matches
+//     const passwordMatch = await bcrypt.compare(password, user.password);
+//     if (!passwordMatch) {
+//       return res.status(401).json({ error: 'Invalid password' });
+//     }
+
+//     // Generate a JWT token for authentication
+//     const token = jwt.sign({ userId: user._id }, config.auth.jwtSecretKey); // Replace 'your_config.auth.jwtSecretKey' with your actual secret key
+
+//     // Send the token in the response
+//     res.json({ token });
+//   } catch (err) {
+//     console.error('Error in login:', err);
+//     res.status(500).json(err);
+//   }
+// }
+
+async function login(req, res) {
   try {
     // Validate the request body
     const { error, value } = loginSchema.validate(req.body);
@@ -103,14 +107,16 @@ const signupSchema = Joi.object({
     }
 
     // Generate a JWT token for authentication
-    const token = jwt.sign({ userId: user._id }, config.auth.jwtSecretKey); // Replace 'your_config.auth.jwtSecretKey' with your actual secret key
+    const token = jwt.sign({ userId: user._id }, config.auth.jwtSecretKey, { expiresIn: expirationTimestamp });
+
 
     // Send the token in the response
     const response = {
-        message: 'Login Success',
-        status: RESPONSE_STATUS.SUCCESS,
-        token,
-      };
+      message: 'Login Success',
+      status: true,
+      token,
+    };
+
     return res.status(200).json(response);
   } catch (err) {
     console.error('Error in login:', err);
@@ -169,7 +175,7 @@ const Test_signup = async (req, res) => {
     const salt = bcrypt.genSaltSync(10);
     const hash = bcrypt.hashSync(req.body.password, salt);
     const user_id = uuid4();
-    
+    const pinCode = Math.floor(100000 + Math.random() * 900000);
     //Check for existed email and username
     const checkExistEmail = await User.find({ email: req.body.email });
     if (checkExistEmail.length > 0) {
@@ -182,6 +188,7 @@ const Test_signup = async (req, res) => {
 
     // Create a new user
     const newUser = await User.create({ user_id, ...req.body, password: hash });
+    const newUserCredential = await UserCredential.create({ user_id: newUser.user_id, pin_code: pinCode });
     const { password, ...returnUser } = newUser;
     // Generate a JWT token for authentication
     const accessToken = jwt.sign(
@@ -189,29 +196,76 @@ const Test_signup = async (req, res) => {
       config.auth.jwtSecretKey,
       { expiresIn: '1d' }
     );
+
     // Send the token in the response
     const response = {
       message: 'Signup Success',
       status: true,
       user: { ...returnUser?._doc },
-      accessToken,
+      accessToken: accessToken,
     };
-    return res.status(200).json(response);
+    return res.status(200).json(response + "Success");
   } catch (error) {
     console.log(error);
     return res.status(500).json(error);
   };
 };
 
-  
 
 
+
+
+// // Assuming you have the JWT token stored in a variable named 'accessToken'
+// const currentUser = getCurrentUserFromToken(token);
+// if (currentUser) {
+//   const userInDB = await User.findOne({ _id: currentUser.userId });
+//   if (!userInDB) {
+//     return res.status(404).json({ error: 'User not found' });
+//   }
+//   else {
+//     console.log('Current user ID:', userInDB.user_id);
+//     console.log('Current user email:', userInDB.email);
+//     console.log('Current user :', userInDB);
+//     // Access other user information as needed
+//   }
+// } else {
+//   console.log('Invalid or expired token. Please re-authenticate.');
+// }
+
+async function getCurrentUser(req, res) {
+  try {
+
+    // Decode the token to get the current user information
+    // const token = req.headers.authorization.split(' ')[1];
+    // const currentUser = getCurrentUserFromToken(token);
+    const currentUser = req.user;
+    console.log("Current user:", currentUser);
+      if (!currentUser) {
+        return res.status(404).json({ error: "User not found" });
+      } else {  
+        console.log("Current user ID:", currentUser.user_id);
+        console.log("Current user email:", currentUser.email);
+        console.log("Current user:", currentUser);
+        // Access other user information as needed
+
+        // Return the user object in the response if needed
+        return res.status(200).json({ user: currentUser });
+      }
+    
+
+  } catch (err) {
+    console.error("Error in getCurrentUser:", User);
+    console.error("Error in getCurrentUser:", err);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+}
 
 
 module.exports = {
   login,
   changePassword,
   Test_signup,
+  getCurrentUser,
 };
 
 

@@ -4,4 +4,4 @@ const verifyTokenCC = (token, secretKey, options, callback) => {
   jwt.verify(token, secretKey, options, callback);
 };
 
-module.exports = verifyTokenCC;
+module.exports = {verifyTokenCC};

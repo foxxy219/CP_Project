@@ -1,5 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const { updatePinCode } = require("./utils/updatePinCode.js");
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
@@ -8,6 +9,7 @@ const http = require('http');
 const userRoutes = require('./routes/userRoute');
 const app = express();
 const db = mongoose.connection;
+const adminRoutes = require('./routes/adminRoute');
 
 const corsOption = {
     credentials: true,
@@ -39,8 +41,13 @@ mongoose
 db.on('error', (error) => {
     console.error('MongoDB connection error:', error);
 });
-app.use('/api', userRoutes);
+app.use('/api/user', userRoutes);
+// app.use("/api/admin", require(adminRoutes));
 var server = http.createServer(app)
+
+
+//Function called when the server is started
+updatePinCode();
 
 server.listen(config.server.port, () => {
     console.log(
