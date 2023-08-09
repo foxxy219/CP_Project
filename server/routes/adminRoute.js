@@ -7,7 +7,6 @@ const { authenticate } = require('../middleware');
 router.post('/register',authenticate,  adminController.registerForNewUser);
 router.post('/deactive-user', authenticate, adminController.DeactivateUser);
 router.post('/active-user', authenticate, adminController.ActivateUser);
-// router.post('/check-user-information', authenticate, adminController.checkUserInformation);
 router.post('/change-role', authenticate, adminController.changeUserRole);
 
 module.exports = router;

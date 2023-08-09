@@ -2,3 +2,5 @@
 .tmp.drivedownload
 node_modules/
 build/
+.vscode/
+```

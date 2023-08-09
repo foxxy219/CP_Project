@@ -1,6 +1,27 @@
-import React from 'react';
+import React, { useState } from 'react';
+import axios from 'axios';
+import { useNavigate  } from 'react-router-dom';
 
 const LoginPage = () => {
+
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const navigate = useNavigate();
+    const handleSignIn = async () => {
+        try {
+            const response = await axios.post('/api/login', { email, password });
+            if (response.data.status) {
+                navigate('/home'); // Navigate to home page on successful login
+            } else {
+                // Handle unsuccessful login
+                
+            }
+        } catch (error) {
+            // Handle error
+            
+        }
+    };
+
     return (
         <section className="bg-gray-50 dark:bg-gray-900">
             <script defer src="https://unpkg.com/alpinejs@3.2.3/dist/cdn.min.js"></script>
