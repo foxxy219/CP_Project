@@ -10,7 +10,10 @@ const userRoutes = require('./routes/userRoute');
 const app = express();
 const db = mongoose.connection;
 const adminRoutes = require('./routes/adminRoute');
+const hardwareRoutes = require('./routes/hardwareRoute');
 
+process.env.TZ = 'Asia/Ho_Chi_Minh';
+console.log(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
 const corsOption = {
     credentials: true,
     origin: '*',
@@ -43,6 +46,7 @@ db.on('error', (error) => {
 });
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/hardware', hardwareRoutes);
 var server = http.createServer(app)
 
 

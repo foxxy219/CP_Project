@@ -1,5 +1,7 @@
 const bcrypt = require('bcryptjs');
 const User = require('../models/UserModel.js');
+const UserCredential = require('../models/HW_UserCredentialDataModel.js');
+const Attendance = require('../models/AttendanceModel.js');
 const Joi = require('joi');
 const uuid4 = require("uuid4");
 const jwt = require('jsonwebtoken');
@@ -32,9 +34,12 @@ const changeRoleSchema = Joi.object({
 });
 
 
+
+
 const registerForNewUser = async (req, res) => {
     try {
         const currentUser = req.user;
+        const pinCode = Math.floor(100000 + Math.random() * 900000);
         // Check if the current user is an admin
         if (currentUser.role !== 'admin') {
             return res.status(403).send('You are not authorized to register a new user');
@@ -67,16 +72,35 @@ const registerForNewUser = async (req, res) => {
             contact_phone: value.contact_phone,
             role: value.role || 'user', // Assign 'user' role if not provided (optional)
             credential_id: value.credential_id,
-            isActivated: value || false,
+            isActivated: value.is_activated || false,
+        });
+
+        //Create a new user credential object
+        const newUserCredential = new UserCredential({
+            user_id: userId,
+            pin_code: pinCode,
+            rfid_data: value.rfid_data,
+            face_data: value.face_data,
+        });
+
+        // Create a new attendance object
+        const newAttendance = new Attendance({
+            user_id: userId,
+            access: false,
+            status: 'absent',
         });
 
         // Save the new user to the database
         await newUser.save();
+        // Save the new user credential to the database
+        await newUserCredential.save();
+        // Save the new attendance to the database
+        await newAttendance.save();
 
         return res.status(201).json({ message: 'User registered successfully' });
     } catch (error) {
         console.error(error);
-        return res.status(500).send('Internal Server Error');
+        return res.status(500).send('Internal Server Error' + error);
     }
 };
 
@@ -167,32 +191,6 @@ const ActivateUser = async (req, res) => {
     }
 }
 
-// const checkUserInformation = async (req, res) => { 
-//     try {
-//         const role = req.user.role;
-//         if (role !== 'admin') {
-//             return res.status(403).send('You are not authorized to check user information');
-//         }
-
-//         const { user_id, username, credential_id } = req.body;
-//         await User.findOne({ user_id, username, credential_id }, (err, user) => {
-//             if (err) {
-//                 return res.status(500).send(err);
-//             }
-
-//             if (!user) {
-//                 return res.status(404).send('User not found');
-//             }
-//             if (!user.isActivated) {
-//                 return res.status(401).send(err + 'User is not activated');
-//             }
-
-//         });
-//     }
-//      catch (error) {
-//         return res.status(500).send(error);
-//     }
-// }
 
 
 
