@@ -1,26 +1,64 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate  } from 'react-router-dom';
-
+import { useNavigate } from 'react-router-dom';
+const unsuccessfulLogin = require('./unsuccessfulLogin');
 const LoginPage = () => {
-
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [emailError, setEmailError] = useState('');
+    const [passwordError, setPasswordError] = useState('');
     const navigate = useNavigate();
     const handleSignIn = async () => {
         try {
-            const response = await axios.post('/api/login', { email, password });
+            if (!email || !password) {
+                console.log('Email and password are required');
+                return;
+            }
+            const response = await axios.post(
+                'http://localhost:4000/api/user/login', JSON.stringify(
+                    { "email": email, "password": password }),
+                {
+                    headers: {
+                        'Content-Type': 'application/json' // Set the Content-Type header
+                    }
+                }
+            );
+
             if (response.data.status) {
+                console.log('Login successful');
+                const token = response.data.token;
+                localStorage.setItem('token', token);
+                console.log('token: ', token);
                 navigate('/home'); // Navigate to home page on successful login
             } else {
                 // Handle unsuccessful login
-                
+                console.log('Login unsuccessful');
+                navigate('/unsuccessful-login');
             }
+            console.log(response);
         } catch (error) {
             // Handle error
-            
+            console.error(error);
         }
     };
+
+    // const validateEmail = () => {
+    //     if (!email) {
+    //         setEmailError('Email is required');
+    //     } else if (!/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/.test(email)) {
+    //         setEmailError('Invalid email format');
+    //     } else {
+    //         setEmailError('');
+    //     }
+    // };
+
+    // const validatePassword = () => {
+    //     if (password.length < 8) {
+    //         setPasswordError('Password must be at least 8 characters');
+    //     } else {
+    //         setPasswordError('');
+    //     }
+    // };
 
     return (
         <section className="bg-gray-50 dark:bg-gray-900">
@@ -35,7 +73,6 @@ const LoginPage = () => {
                         <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
                             Sign in to your account
                         </h1>
-                        <form className="space-y-4 md:space-y-6" action="#">
                             <div>
                                 <label
                                     htmlFor="email"
@@ -47,6 +84,11 @@ const LoginPage = () => {
                                     type="email"
                                     name="email"
                                     id="email"
+                                    value={email}
+                                    onChange={(e) => {
+                                        setEmail(e.target.value)
+                                        // validateEmail();
+                                    }}
                                     className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                     placeholder="name@company.com"
                                     required
@@ -63,10 +105,16 @@ const LoginPage = () => {
                                     type="password"
                                     name="password"
                                     id="password"
+                                    value={password}
+                                    onChange={(e) => {
+                                        setPassword(e.target.value)
+                                        // validatePassword();
+                                    }}
                                     placeholder="••••••••"
                                     className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                     required
                                 />
+                                <p className="text-red-500">{passwordError}</p>
                             </div>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-start">
@@ -94,13 +142,25 @@ const LoginPage = () => {
                                 >
                                     Forgot password?
                                 </a>
+
                             </div>
+                            {/* <div className="ml-3 text-sm">
+                                <label
+                                    htmlFor="remember"
+                                    className="text-gray-500 dark:text-gray-300"
+                                >
+                                    Email and password are required
+                                </label>
+                            </div> */}
                             <button
                                 type="button"
                                 className="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+                                onClick={handleSignIn}
+                                disabled={emailError || passwordError}
                             >
                                 Sign in
                             </button>
+
                             {/* <p className="text-sm font-light text-gray-500 dark:text-gray-400">
                                 Don’t have an account yet?{' '}
                                 <a
@@ -110,12 +170,12 @@ const LoginPage = () => {
                                     Sign up
                                 </a>
                             </p> */}
-                        </form>
                     </div>
                 </div>
             </div>
         </section>
     );
 };
+
 
 export default LoginPage;

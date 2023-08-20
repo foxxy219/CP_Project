@@ -15,6 +15,7 @@ const hardwareRoutes = require('./routes/hardwareRoute');
 process.env.TZ = 'Asia/Ho_Chi_Minh';
 console.log(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
 const corsOption = {
+    origin:'http://localhost:3000', 
     credentials: true,
     origin: '*',
     allowedHeaders: [
