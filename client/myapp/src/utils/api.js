@@ -1,0 +1,1 @@
+const getCurrentUserApiUrl = "http://localhost:4000/api/user/get-current-user";

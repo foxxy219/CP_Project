@@ -22,6 +22,7 @@ const config = require('../config/index.js');
 const { expirationTimestamp } = require('../utils/ExpiredTime.js');
 const { getCurrentUserFromToken } = require('../middleware/index.js');
 const saltRounds = 10; // For bcrypt
+const ObjectId = require('mongoose').Types.ObjectId;
 
 // Validation schema for login
 const loginSchema = Joi.object({
@@ -210,12 +211,36 @@ async function getCurrentUser(req, res) {
   }
 }
 
+async function getUserByObjectId(req, res) {
+  try {
+    const currentUser = req.user;
+    const userIdFromRequest = new ObjectId(req.body._id);
+    const objectId = await User.findOne({ _id: currentUser._id }); 
+    console.log("objectId:", objectId);
+    console.log("userIdFromRequest:", userIdFromRequest);
+    if (!objectId || !userIdFromRequest){
+      return res.status(404).json({ error: "User not found, please provide both object id and token" });
+    }
+    else if (userIdFromRequest.toString() !== objectId._id.toString()){
+      return res.status(404).json({ error: "object id different from object id in token" });
+    }
+    else if (userIdFromRequest.toString() === objectId._id.toString()){
+      return res.status(200).json({ objectId });
+    }
+  } catch (err) {
+    console.error("Error in getUserById:", User);
+    console.error("Error in getUserById:", err);
+    return res.status(500).json("Internal Server Error"+ err );
+  }
+}
+
 
 module.exports = {
   login,
   changePassword,
   Test_signup,
   getCurrentUser,
+  getUserByObjectId,
 };
 
 
