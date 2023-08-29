@@ -7,6 +7,7 @@ const attendanceSchema = new mongoose.Schema({
     date: { type: Date },
     clock_in_time: { type: Date },
     clock_out_time: { type: Date },
+    working_hours: { type: Number },
     status: { type: String, required: true, default: "Absent" },
     note: { type: String},
 },

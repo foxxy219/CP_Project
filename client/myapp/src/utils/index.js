@@ -1,5 +1,8 @@
 import config from "../config";
 import jwt_decode from 'jwt-decode';
+import axios from 'axios';
+import { API_ROUTES } from "../public/constants";
+
 export const getCurrentUserFromToken = async () => {
   try {
     const token = localStorage.getItem('token');
@@ -21,28 +24,29 @@ export const getCurrentUserFromToken = async () => {
 export async function fetchUserData(_id) {
   const token = localStorage.getItem('token');
   
-  const options = {
-    method: 'POST', // Changed to POST since we're sending a body
+  const config = {
     headers: {
-      'Authorization': `Bearer ${token}`, // Added 'Bearer ' prefix
+      'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ _id }) // Send user_id in the body
+    }
+  };
+
+  const body = {
+    _id
   };
 
   try {
-    const res = await fetch('http://localhost:4000/api/user/get-user-by-object-id/', options);
-    const data = await res.json();
-    
-    if (res.status === 200) {
-      console.log('data: ', data);
-      return data;
+    const response = await axios.post(API_ROUTES.user.getUserByObjectId , body, config);
+
+    if (response.status === 200) {
+      console.log('data: ', response.data);
+      return response.data;
     } else {
-      console.error('Failed to fetch user:', data.error);
+      console.error('Failed to fetch user:', response.data.error);
       return null;
     }
-  } catch (err) {
-    console.error('Error fetching user:', err);
+  } catch (error) {
+    console.error('Error fetching user:', error);
     return null;
   }
 }
