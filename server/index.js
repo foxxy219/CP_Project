@@ -11,6 +11,8 @@ const app = express();
 const db = mongoose.connection;
 const adminRoutes = require('./routes/adminRoute');
 const hardwareRoutes = require('./routes/hardwareRoute');
+const cron = require('node-cron');
+const storeAndResetAttendance = require('./utils/StoreAndResetAttendance');
 
 process.env.TZ = 'Asia/Ho_Chi_Minh';
 console.log(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
@@ -53,6 +55,13 @@ var server = http.createServer(app)
 
 //Function called when the server is started
 updatePinCode();
+
+// Schedule the function to run at 10:00 PM every day
+cron.schedule('0 22 * * *', async () => {
+    console.log('Running scheduled task...');
+    await storeAndResetAttendance(); // Call your function here
+    console.log('Scheduled task completed.');
+});
 
 server.listen(config.server.port, () => {
     console.log(
