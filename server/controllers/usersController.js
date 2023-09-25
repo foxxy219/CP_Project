@@ -1,16 +1,3 @@
-// //@ts-ignore
-// import { NextFunction, Request, Response } from 'express';
-// //@ts-ignore
-// const joi = require('joi');
-// import userModel from '../models/user.js';
-// import { RESPONSE_STATUS } from '../utils';
-// import jwt from 'jsonwebtoken';
-// import config from '../config/config';
-// import { compareSync } from 'bcrypt';
-// import path from 'path';
-// import { AuthRequest } from '../interfaces';
-// import axios from 'axios';
-// import { v4 as uuidv4 } from 'uuid';
 const bcrypt = require('bcryptjs');
 const User = require('../models/UserModel.js');
 const UserCredential = require('../models/HW_UserCredentialDataModel.js');
