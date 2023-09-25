@@ -13,6 +13,10 @@ const AuthChecker = () => {
       // If the token is valid, navigate to the home page
       navigate('/home');
     }
+    else if (!token){
+      // If the token is invalid or does not exist, navigate to the login page
+      navigate('/login');
+    }
   }, [navigate]);
 
   // Return a placeholder element or loading spinner if needed
