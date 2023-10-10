@@ -87,7 +87,7 @@ const registerForNewUser = async (req, res) => {
         const newAttendance = new Attendance({
             user_id: userId,
             access: false,
-            status: 'absent',
+            status: 'Absent',
         });
 
         // Save the new user to the database
