@@ -118,10 +118,12 @@ const updateAttendance = async (user_id, access_in) => {
                 }
             }
         }
-        storeAttendance();
-        // Save the updated attendance record
         await attendance.save();
+        await storeAttendance();
+        // Save the updated attendance record
 
+
+        console.log(attendance);
     } catch (error) {
         console.error(error);
         // Handle the error as needed

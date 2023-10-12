@@ -1,14 +1,21 @@
 const fs = require('fs');
+const { date } = require('joi');
 const PDFDocument = require('pdfkit');
 const createPDF = require('csv-writer').createObjectCsvWriter;
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 
 
 
-function isoDate (userAttendance){
+function isoDate(userAttendance) {
     const date = new Date(userAttendance);
     const isoDate = date.toISOString().split('T')[0];
     return isoDate;
+}
+
+function isoTime(userAttendance) {
+    const date = new Date(userAttendance);
+    const isoTime = date.toISOString().split('T')[1].split('.')[0];
+    return isoTime;
 }
 
 // Function to generate a PDF file for a user's attendance
@@ -27,7 +34,7 @@ async function generatePDF(userAttendance) {
     doc.text(`Status: ${userAttendance.status}`);
 
     doc.end();
-    
+
     // Create a buffer to store the PDF content
     return new Promise((resolve) => {
         const buffers = [];
@@ -38,33 +45,46 @@ async function generatePDF(userAttendance) {
         });
     });
 
-    
+
 }
 
 // Function to generate a CSV file for a user's attendance
 async function generateCSV(userAttendance) {
-    const isoDateValue = isoDate(userAttendance.clock_out_time);
-    const csvFileName = `attendance_${userAttendance.user_id}_${isoDateValue}.csv`;
-    const csvWriter = createCsvWriter({
-        path: csvFileName,
-        header: [
-            { id: 'user_id', title: 'User ID' },
-            { id: 'working_hours', title: 'Working Hours' },
-            // Add more columns as needed
-        ],
-    });
+    const isoClockoutDateValue = isoDate(userAttendance.clock_out_time);
+    const isoClockinDateValue = isoDate(userAttendance.clock_in_time);
+    const isoClockoutTimeValue = isoTime(userAttendance.clock_out_time);
+    const isoClockinTimeValue = isoTime(userAttendance.clock_in_time);
+    const csvFileName = `attendance_${userAttendance.user_id}.csv`;
 
-    const records = [
-        {
-            user_id: userAttendance.user_id,
-            working_hours: userAttendance.working_hours,
-            // Add more columns as needed
-        },
-    ];
+    const dataToAppend = [
+        userAttendance.user_id,
+        isoClockinTimeValue,
+        isoClockoutTimeValue,
+        isoClockinDateValue,
+        isoClockoutDateValue,
+        userAttendance.working_hours,
+        userAttendance.status,
+    ].join(','); // Create a comma-separated string
 
-    await csvWriter.writeRecords(records);
+    if (fs.existsSync(csvFileName)) {
+        // File exists, read existing data
+        const existingData = fs.readFileSync(csvFileName, 'utf-8');
 
-    return csvFileName;
+        // Append the new data to the existing data
+        const newData = `${existingData}\n${dataToAppend}`;
+
+        // Write the combined data back to the file
+        fs.writeFileSync(csvFileName, newData);
+        console.log('CSV file updated successfully');
+    } else {
+        // Create a new CSV file
+        const header = 'User ID,Clock In Time,Clock Out Time,Clock In Date,Clock Out Date,Working Hours,Status\n';
+        const newData = `${header}${dataToAppend}`;
+
+        fs.writeFileSync(csvFileName, newData);
+        console.log('CSV file created successfully');
+    }
 }
+
 
 module.exports = { generatePDF, generateCSV };
