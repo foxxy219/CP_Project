@@ -72,7 +72,8 @@ async function login(req, res) {
       status: true,
       token,
     };
-
+    user.isOnline = true;
+    await user.save();
     return res.status(200).json(response);
   } catch (err) {
     console.error('Error in login:', err);
@@ -80,6 +81,25 @@ async function login(req, res) {
   }
 }
 
+//Logout function
+async function logout(req, res) {
+  try {
+    const { userId } = req.body;
+
+    const user = await User.findOne({ user_id: userId });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    else {
+      user.isOnline = false;
+      await user.save();
+      return res.status(200).json({ message: 'Logout Success, online status is false' });
+    }
+  } catch (err) {
+    console.error('Error in logout:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
 
 // Logout function (optional, as it's usually handled on the client-side with tokens)
 // For completeness, you can simply invalidate the token on the client-side.
@@ -224,6 +244,7 @@ async function getUserByObjectId(req, res) {
 
 module.exports = {
   login,
+  logout,
   changePassword,
   Test_signup,
   getCurrentUser,

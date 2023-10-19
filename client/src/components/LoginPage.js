@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { API_ROUTES } from '../public/constants';
 const LoginPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -22,7 +23,7 @@ const LoginPage = () => {
             setPasswordError('');
             setLoginError('');
             const response = await axios.post(
-                'http://localhost:4000/api/user/login', JSON.stringify(
+                API_ROUTES.user.login, JSON.stringify(
                     { "email": email, "password": password }),
                 {
                     headers: {

@@ -39,7 +39,6 @@ export async function fetchUserData(_id) {
     const response = await axios.post(API_ROUTES.user.getUserByObjectId , body, config);
 
     if (response.status === 200) {
-      console.log('data: ', response.data);
       return response.data;
     } else {
       console.error('Failed to fetch user:', response.data.error);

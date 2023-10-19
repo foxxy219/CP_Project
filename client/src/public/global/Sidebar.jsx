@@ -1,8 +1,13 @@
-import { useState } from "react";
-import { Sidebar, Menu, MenuItem } from "react-pro-sidebar";
+import { ProSidebar, Menu, MenuItem } from "react-pro-sidebar";
 import { Box, IconButton, Typography, useTheme } from "@mui/material";
 import { Link } from "react-router-dom";
 import { tokens } from "../../theme";
+import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import 'react-pro-sidebar/dist/css/styles.css';
+import { getCurrentUserFromToken, fetchUserData } from '../../utils/index';
+
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
 import ContactsOutlinedIcon from "@mui/icons-material/ContactsOutlined";
@@ -16,7 +21,7 @@ import TimelineOutlinedIcon from "@mui/icons-material/TimelineOutlined";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
 
-const Item = ({ title, to, icon, selected, setSelected }) => {
+const Item: React.FC<IItemProps> = ({ title, to, icon, selected, setSelected }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   return (
@@ -39,12 +44,32 @@ const SidebarLeft = () => {
   const colors = tokens(theme.palette.mode);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [selected, setSelected] = useState("Dashboard");
+  const navigate = useNavigate();
+  const [returnUser, setReturnUser] = useState({}); // Provide a default value
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const user = await getCurrentUserFromToken();
+      if (user.userId) {
+        fetchUserData(user.userId)
+          .then(userData => {
+            setReturnUser(userData);
+          })
+          .catch(error => {
+            console.error('Failed to fetch user data:', error);
+          });
+      } else {
+        navigate('/login');
+      }
+    };
+    fetchData();
+  }, []);
 
   return (
     <Box
       sx={{
         "& .pro-sidebar-inner": {
-          background: `${colors.primary[400]} !important`,
+          background: `${colors.primary[400]} !important`, // Set your dark background color
         },
         "& .pro-icon-wrapper": {
           backgroundColor: "transparent !important",
@@ -60,7 +85,7 @@ const SidebarLeft = () => {
         },
       }}
     >
-      <Sidebar collapsed={isCollapsed}>
+      <ProSidebar collapsed={isCollapsed}>
         <Menu iconShape="square">
           {/* LOGO AND MENU ICON */}
           <MenuItem
@@ -88,7 +113,7 @@ const SidebarLeft = () => {
             )}
           </MenuItem>
 
-          {!isCollapsed && (
+          {!isCollapsed && returnUser && ( // Check if returnUser exists
             <Box mb="25px">
               <Box display="flex" justifyContent="center" alignItems="center">
                 <img
@@ -106,10 +131,10 @@ const SidebarLeft = () => {
                   fontWeight="bold"
                   sx={{ m: "10px 0 0 0" }}
                 >
-                  Jessica Smith
+                  {returnUser.objectId?.full_name ? returnUser.objectId?.full_name : 'Loading...'}
                 </Typography>
                 <Typography variant="h5" color={colors.greenAccent[500]}>
-                  Smart Admin
+                  {returnUser.objectId?.role === 'admin' ? 'Administrator' : returnUser.objectId?.role === 'user' ? 'User' : 'Manager'}
                 </Typography>
               </Box>
             </Box>
@@ -162,7 +187,7 @@ const SidebarLeft = () => {
             </Typography>
             <Item
               title="Profile Form"
-              to="/form"
+              to="/home/form"
               icon={<PersonOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
@@ -219,7 +244,7 @@ const SidebarLeft = () => {
             />
           </Box>
         </Menu>
-      </Sidebar>
+      </ProSidebar>
     </Box>
   );
 };

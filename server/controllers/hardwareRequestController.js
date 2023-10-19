@@ -1,36 +1,53 @@
 const mongoose = require('mongoose');
 const HW_UserCredential = require('../models/HW_UserCredentialDataModel');
 const Attendance = require('../models/AttendanceModel');
-const { date } = require('joi');
-const {storeAttendance} = require('../utils/StoreAndResetAttendance');
-// Define the current timestamp, use for testing
-const utc7_offset = 25200; // 7 hours in seconds (unix timestamp is in seconds)
-const currentTimestamp = Date.now() + utc7_offset;
+const { date, bool, boolean } = require('joi');
+const { storeAttendance } = require('../utils/StoreAndResetAttendance');
 
+
+const TimeNow = new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' });
+const localNow = new Date(TimeNow);
+const HourMinSecfromLocalNow = localNow.getHours() + ":" + localNow.getMinutes() + ":" + localNow.getSeconds();
+console.log(HourMinSecfromLocalNow);
+
+function checkInValidTime() {
+    if (HourMinSecfromLocalNow > '22:00:00' && HourMinSecfromLocalNow < '23:59:59') {
+        return false;
+    }
+    else {
+        return true;
+    }
+}
 
 // Function to check for L1 secure level (either RFID or PIN code)
 const checkForL1SecureLevel = async (req, res, next) => {
-    try {
-        const { rfid_data, pin_code } = req.body;
+    const inCheck = checkInValidTime();
+    if (inCheck) {
+        try {
+            const { rfid_data, pin_code } = req.body;
 
-        if (rfid_data && pin_code) {
-            return res.status(400).send('Please provide either RFID or PIN code, not both.');
+            if (rfid_data && pin_code) {
+                return res.status(400).send('Please provide either RFID or PIN code, not both.');
+            }
+
+            if (pin_code) {
+                const result = await checkForPinCode(pin_code);
+                return res.status(result.status).send({ userId: result.userId, message: result.message });
+            }
+
+            if (rfid_data) {
+                const result = await checkForRFIDData(rfid_data);
+                return res.status(result.status).send({ userId: result.userId, message: result.message });
+            }
+
+            return res.status(400).send('Please provide RFID or PIN code.');
+        } catch (error) {
+            console.error(error);
+            return res.status(500).send('Internal Server Error: ' + error);
         }
-
-        if (pin_code) {
-            const result = await checkForPinCode(pin_code);
-            return res.status(result.status).send({userId : result.userId, message: result.message});
-        }
-
-        if (rfid_data) {
-            const result = await checkForRFIDData(rfid_data);
-            return res.status(result.status).send({userId : result.userId, message: result.message});
-        }
-
-        return res.status(400).send('Please provide RFID or PIN code.');
-    } catch (error) {
-        console.error(error);
-        return res.status(500).send('Internal Server Error: ' + error);
+    }
+    else {
+        return res.status(400).send('End of checkin or checkout time is 10PM, please try again after 12PM.');
     }
 }
 
@@ -119,10 +136,6 @@ const updateAttendance = async (user_id, access_in) => {
             }
         }
         await attendance.save();
-        await storeAttendance();
-        // Save the updated attendance record
-
-
         console.log(attendance);
     } catch (error) {
         console.error(error);

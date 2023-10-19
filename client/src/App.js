@@ -1,12 +1,14 @@
 import React from 'react';
 import LoginPage from './components/LoginPage';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import HomePage from './components/homepage_user';
+// import HomePage from './components/homepage_user';
 import AuthChecker from './components/AuthChecker';
 import SidebarLeft from './public/global/Sidebar';
 import Topbar from './public/global/Topbar';
+import Form from './public/form/index';
 import { useState } from 'react';
-import { useMode } from './theme';
+import { ColorModeContext, useMode } from './theme';
+import AppLayout from './layout/AppLayout';
 
 
 const App = () => {
@@ -16,18 +18,11 @@ const App = () => {
         <Router>
             <Routes>
                 <Route path="/" element={<AuthChecker />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/home" element={
-                    <>
-                    <SidebarLeft isSidebar={isSidebar} setIsSidebar={setIsSidebar} />
-                    <main className= "content">
-                        <Topbar isSidebar={isSidebar} setIsSidebar={setIsSidebar} />
-                        <HomePage />
-                    </main>
-                    </>
-                } />
+                <Route path="login" element={<LoginPage />} />
+                <Route path="home" element={<AppLayout></AppLayout>} />
+                <Route path="home/form" element={<AppLayout><Form /></AppLayout>} />
             </Routes>
-        </Router>
+        </Router >
     );
 };
 

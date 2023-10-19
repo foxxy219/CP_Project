@@ -6,6 +6,8 @@ export const API_ROUTES = {
         signUp: `${API_ENDPOINT}/user/sign-up`,
         getUserByObjectId: `${API_ENDPOINT}/user/get-user-by-object-id`,
         getCurrentUser: `${API_ENDPOINT}/user/get-current-user`,
+        changePassword: `${API_ENDPOINT}/user/change-password`,
+        logout: `${API_ENDPOINT}/user/logout`,
     },
     admin:{
         register: `${API_ENDPOINT}/admin/register`,

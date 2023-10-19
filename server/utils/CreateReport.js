@@ -18,6 +18,12 @@ function isoTime(userAttendance) {
     return isoTime;
 }
 
+function isoMonthandYear(userAttendance) {
+    const date = new Date(userAttendance);
+    const isoMonthandYear = date.toISOString().split('T')[0].split('-')[0] + "_" + date.toISOString().split('T')[0].split('-')[1];
+    return isoMonthandYear;
+}
+
 // Function to generate a PDF file for a user's attendance
 async function generatePDF(userAttendance) {
     const doc = new PDFDocument();
@@ -54,7 +60,8 @@ async function generateCSV(userAttendance) {
     const isoClockinDateValue = isoDate(userAttendance.clock_in_time);
     const isoClockoutTimeValue = isoTime(userAttendance.clock_out_time);
     const isoClockinTimeValue = isoTime(userAttendance.clock_in_time);
-    const csvFileName = `attendance_${userAttendance.user_id}.csv`;
+    const isoMonthandYearValue = isoMonthandYear(userAttendance.clock_in_time);
+    const csvFileName = `attendance_${userAttendance.user_id}_${isoMonthandYearValue}.csv`;
 
     const dataToAppend = [
         userAttendance.user_id,
