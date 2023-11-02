@@ -4,11 +4,35 @@ const UserCredential = require('../models/HW_UserCredentialDataModel.js');
 const Attendance = require('../models/AttendanceModel.js');
 const Joi = require('joi');
 const uuid4 = require("uuid4");
-const jwt = require('jsonwebtoken');
-const secret_key = require('../config/index.js').auth.jwtSecretKey;
-const { verify } = require("jsonwebtoken");
-const express = require('express');
+const cloudinary = require('cloudinary').v2;
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
 
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_SECRET_KEY,
+});
+
+const uploadImage = async (req, res) => {
+    try {
+        const file = req.files.image
+        console.log(file);
+        if (!file) {
+            return res.status(400).send('No file uploaded.');
+        }
+
+        const uploadResponse = await cloudinary.uploader.upload(file.tempFilePath, {
+            public_id: 'user_profile_picture'
+        });
+
+        console.log(uploadResponse);
+        return res.status(200).send(uploadResponse);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send('Internal Server Error');
+    }
+};
 
 const signupSchema = Joi.object({
     user_id: Joi.string(),
@@ -24,7 +48,6 @@ const signupSchema = Joi.object({
     contact_email: Joi.string(),
     contact_phone: Joi.string(),
     role: Joi.string(),
-    credential_id: Joi.number().required(),
     isActivated: Joi.boolean(),
 }, { timestamps: true });
 
@@ -71,7 +94,6 @@ const registerForNewUser = async (req, res) => {
             contact_email: value.contact_email,
             contact_phone: value.contact_phone,
             role: value.role || 'user', // Assign 'user' role if not provided (optional)
-            credential_id: value.credential_id,
             isActivated: value.is_activated || false,
         });
 
@@ -133,9 +155,9 @@ const changeUserRole = async (req, res) => {
         console.error(error);
         return res.status(500).send('Internal Server Error');
 
-            
-        }
+
     }
+}
 
 const DeactivateUser = async (req, res) => {
     try {
@@ -193,11 +215,11 @@ const ActivateUser = async (req, res) => {
 
 
 
-
 module.exports = {
     registerForNewUser,
     DeactivateUser,
     ActivateUser,
     // checkUserInformation,
     changeUserRole,
+    uploadImage,
 };

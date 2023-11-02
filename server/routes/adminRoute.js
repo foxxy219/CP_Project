@@ -11,6 +11,7 @@ router.post('/deactive-user', authenticate, adminController.DeactivateUser);
 router.post('/activate-user', authenticate, adminController.ActivateUser);
 router.post('/change-role', authenticate, adminController.changeUserRole);
 
+router.post('/test-upload-image', authenticate, adminController.uploadImage);
 // Update user authentication information
 router.post('/update-rifd', authenticate, userCredentialController.updateRfid);
 

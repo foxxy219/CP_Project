@@ -26,7 +26,6 @@ const config = {
     url: MONGO_URL,
   },
   server: SERVER,
-  
   auth: {
     jwtSecretKey: JWT_SECRET_KEY,
     secretPassword: SECRET_PASSWORD,  

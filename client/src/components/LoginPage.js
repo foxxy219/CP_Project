@@ -33,14 +33,11 @@ const LoginPage = () => {
             );
 
             if (response.data.status) {
-                console.log('Login successful');
                 const token = response.data.token;
                 localStorage.setItem('token', token);
-                console.log('token: ', token);
                 navigate('/home'); // Navigate to home page on successful login
             } else {
                 // Handle unsuccessful login
-                console.log('Login unsuccessful');
                 setLoginError('Invalid email or password');
             }
         } catch (error) {

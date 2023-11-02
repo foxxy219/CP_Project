@@ -13,7 +13,7 @@ const adminRoutes = require('./routes/adminRoute');
 const hardwareRoutes = require('./routes/hardwareRoute');
 const cron = require('node-cron');
 const { storeAttendance, resetAttendance } = require('./utils/StoreAndResetAttendance');
-
+const fileUpload = require('express-fileupload');
 process.env.TZ = 'Asia/Ho_Chi_Minh';
 console.log(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
 const corsOption = {
@@ -33,6 +33,7 @@ const corsOption = {
 };
 
 app.use(cors(corsOption));
+app.use(fileUpload({useTempFiles: true}))
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, `public`)));
