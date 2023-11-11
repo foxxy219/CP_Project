@@ -52,10 +52,11 @@ const userSchema = yup.object().shape({
   username: yup.string().required('required'),
   full_name: yup.string().required('required'),
   email: yup.string().email('Invalid email').required('required'),
+  contact_phone: yup.string().matches(phoneRegExp, 'Phone number is not valid'),
   password: yup.string().required('required'),
   credential_id: yup.string().required('required'),
-  role: yup.string(),
-  gender: yup.string(),
+  role: yup.string().required('required'),
+  gender: yup.string().required('required'),
   profileImage: yup.mixed().test('isImage', 'Please provide a valid image file', (value) => {
     return value === null || (value && value.type.startsWith('image/'));
   }),
@@ -111,8 +112,22 @@ const Form = () => {
                 helperText={touched.full_name && errors.full_name}
                 sx={{ gridColumn: 'span 2' }}
               />
-              <a>Choose Gender</a>
+              <TextField
+                fullWidth
+                variant='filled'
+                type='text'
+                label='Phone Number'
+                onBlur={handleBlur}
+                onChange={handleChange}
+                value={values.contact_phone}
+                name='contact_phone'
+                error={!!touched.contact_phone && !!errors.contact_phone}
+                helperText={touched.contact_phone && errors.contact_phone}
+                sx={{ gridColumn: 'span 1' }}
+              />
+              
               <Select
+                Choose Gender
                 fullWidth
                 variant='filled'
                 label='Gender'
@@ -122,7 +137,7 @@ const Form = () => {
                 name='Gender'
                 error={!!touched.gender && !!errors.gender}
                 helperText={touched.gender && errors.gender}
-                sx={{ gridColumn: 'span 4' }}
+                sx={{ gridColumn: 'span 1' }}
               >
                 <MenuItem value=''>Select Gender</MenuItem>
                 <MenuItem value='Male'>Male</MenuItem>
@@ -140,7 +155,7 @@ const Form = () => {
                 name='email'
                 error={!!touched.email && !!errors.email}
                 helperText={touched.email && errors.email}
-                sx={{ gridColumn: 'span 4' }}
+                sx={{ gridColumn: 'span 1' }}
               />
               <TextField
                 fullWidth
@@ -168,7 +183,7 @@ const Form = () => {
                 helperText={touched.credential_id && errors.credential_id}
                 sx={{ gridColumn: 'span 4' }}
               />
-              <a>Select role</a>
+              
               <Select
                 fullWidth
                 variant='filled'
@@ -179,7 +194,7 @@ const Form = () => {
                 name='role'
                 error={!!touched.role && !!errors.role}
                 helperText={touched.role && errors.role}
-                sx={{ gridColumn: 'span 4' }}
+                sx={{ gridColumn: 'span 1' }}
               >
                 <MenuItem value=''>Select Role</MenuItem>
                 <MenuItem value='Manager'>Manager</MenuItem>

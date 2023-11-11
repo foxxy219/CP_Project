@@ -19,5 +19,5 @@ router.post('/update-rifd', authenticate, userCredentialController.updateRfid);
 router.post('/delete-user', authenticate, DeleteAll.deleteAllUser);
 router.post('/delete-user-credential', authenticate, DeleteAll.deleteAllUserCredential);
 router.post('/delete-attendance', authenticate, DeleteAll.deleteAllAttendance);
-
+router.post('/delete-user-by-id', authenticate, adminController.deleteUserByUserId);
 module.exports = router;

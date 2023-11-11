@@ -16,18 +16,18 @@ cloudinary.config({
 
 const uploadImage = async (req, res) => {
     try {
-        const file = req.files.image
-        console.log(file);
+        const currentUser = req.user;
+        const file = req.files.profile_picture;
         if (!file) {
             return res.status(400).send('No file uploaded.');
         }
 
         const uploadResponse = await cloudinary.uploader.upload(file.tempFilePath, {
-            public_id: 'user_profile_picture'
+            public_id: '${currentUser.user_id}}'
         });
 
         console.log(uploadResponse);
-        return res.status(200).send(uploadResponse);
+        return uploadResponse;
     } catch (error) {
         console.error(error);
         return res.status(500).send('Internal Server Error');
@@ -39,15 +39,15 @@ const signupSchema = Joi.object({
     username: Joi.string().required(),
     email: Joi.string().email().required(),
     password: Joi.string().required(),
-    full_name: Joi.string(),
+    full_name: Joi.string().required(),
     date_of_birth: Joi.date(),
     credential_id: Joi.number().required(),
-    gender: Joi.string(),
-    profile_picture: Joi.string().required(),
+    gender: Joi.string().required(),
+    profile_picture: Joi.string(),
     location: Joi.string(),
     contact_email: Joi.string(),
     contact_phone: Joi.string(),
-    role: Joi.string(),
+    role: Joi.string().required(),
     isActivated: Joi.boolean(),
 }, { timestamps: true });
 
@@ -57,6 +57,25 @@ const changeRoleSchema = Joi.object({
 });
 
 
+const deleteUserByUserId = async (req, res) => {
+    try {
+        // Check if the current user is an admin
+        const currentUser = req.user;
+        if (currentUser.role !== 'admin') {
+            return res.status(403).send('You are not authorized to delete a user');
+        }
+        user_id = req.body.user_id;
+        // Find the user by user_id in the database
+        const result = await User.deleteOne({ user_id });
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        return res.status(200).json({ message: 'User deleted successfully' });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send('Internal Server Error');
+    }
+};
 
 
 const registerForNewUser = async (req, res) => {
@@ -68,7 +87,13 @@ const registerForNewUser = async (req, res) => {
             return res.status(403).send('You are not authorized to register a new user');
         }
 
-        // Validate the request body against the signupSchema
+        const imageUploadResponse = await uploadImage(req, res);
+
+        if (imageUploadResponse.url !== null) {
+            // Handle the image upload error
+            console.log(imageUploadResponse.url);
+        }
+        
         const { error, value } = signupSchema.validate(req.body);
         if (error) {
             return res.status(400).send(error.details[0].message);
@@ -89,7 +114,7 @@ const registerForNewUser = async (req, res) => {
             date_of_birth: value.date_of_birth,
             credential_id: value.credential_id,
             gender: value.gender,
-            profile_picture: value.profile_picture,
+            profile_picture: imageUploadResponse.url,
             location: value.location,
             contact_email: value.contact_email,
             contact_phone: value.contact_phone,
@@ -222,4 +247,5 @@ module.exports = {
     // checkUserInformation,
     changeUserRole,
     uploadImage,
+    deleteUserByUserId,
 };
