@@ -14,7 +14,7 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_SECRET_KEY,
 });
 
-const uploadImage = async (req, res) => {
+const uploadImage = async (req, res, userId) => {
     try {
         const currentUser = req.user;
         const file = req.files.profile_picture;
@@ -23,14 +23,14 @@ const uploadImage = async (req, res) => {
         }
 
         const uploadResponse = await cloudinary.uploader.upload(file.tempFilePath, {
-            public_id: '${currentUser.user_id}}'
+            public_id: userId + '_profile_picture',
         });
 
         console.log(uploadResponse);
         return uploadResponse;
     } catch (error) {
         console.error(error);
-        return res.status(500).send('Internal Server Error');
+        return res.status(500).send('Internal Server Error' + error);
     }
 };
 
@@ -41,7 +41,7 @@ const signupSchema = Joi.object({
     password: Joi.string().required(),
     full_name: Joi.string().required(),
     date_of_birth: Joi.date(),
-    credential_id: Joi.number().required(),
+    credential_id: Joi.number().unsafe().required(),
     gender: Joi.string().required(),
     profile_picture: Joi.string(),
     location: Joi.string(),
@@ -64,18 +64,30 @@ const deleteUserByUserId = async (req, res) => {
         if (currentUser.role !== 'admin') {
             return res.status(403).send('You are not authorized to delete a user');
         }
-        user_id = req.body.user_id;
-        // Find the user by user_id in the database
-        const result = await User.deleteOne({ user_id });
-        if (result.deletedCount === 0) {
+
+        const user_id = req.body.user_id;
+
+        // Check if the user exists
+        const userExists = await User.exists({ user_id });
+
+        if (!userExists) {po
             return res.status(404).json({ error: 'User not found' });
         }
+
+        // Delete records from multiple collections concurrently
+        await Promise.all([
+            User.deleteOne({ user_id }),
+            UserCredential.deleteOne({ user_id }),
+            Attendance.deleteOne({ user_id }),
+        ]);
+
         return res.status(200).json({ message: 'User deleted successfully' });
     } catch (error) {
         console.error(error);
         return res.status(500).send('Internal Server Error');
     }
 };
+
 
 
 const registerForNewUser = async (req, res) => {
@@ -86,21 +98,20 @@ const registerForNewUser = async (req, res) => {
         if (currentUser.role !== 'admin') {
             return res.status(403).send('You are not authorized to register a new user');
         }
-
-        const imageUploadResponse = await uploadImage(req, res);
+        const userId = uuid4();
+        const imageUploadResponse = await uploadImage(req, res, userId);
 
         if (imageUploadResponse.url !== null) {
             // Handle the image upload error
             console.log(imageUploadResponse.url);
         }
-        
+
         const { error, value } = signupSchema.validate(req.body);
         if (error) {
             return res.status(400).send(error.details[0].message);
         }
 
         // Generate a unique user_id using uuid4
-        const userId = uuid4();
 
         // Hash the password before saving it to the database
         const hashedPassword = await bcrypt.hash(value.password, 10);
@@ -144,7 +155,10 @@ const registerForNewUser = async (req, res) => {
         // Save the new attendance to the database
         await newAttendance.save();
 
-        return res.status(201).json({ message: 'User registered successfully' });
+        return res.status(201).json({
+            message: 'User registered successfully',
+            user_id: userId,
+        });
     } catch (error) {
         console.error(error);
         return res.status(500).send('Internal Server Error' + error);

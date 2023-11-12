@@ -74,6 +74,7 @@ async function login(req, res) {
     };
     user.isOnline = true;
     await user.save();
+    console.log(response)
     return res.status(200).json(response);
   } catch (err) {
     console.error('Error in login:', err);
@@ -223,8 +224,8 @@ async function getUserByObjectId(req, res) {
     const currentUser = req.user;
     const userIdFromRequest = new ObjectId(req.body._id);
     const objectId = await User.findOne({ _id: currentUser._id }); 
-    console.log("objectId:", objectId);
-    console.log("userIdFromRequest:", userIdFromRequest);
+    // console.log("objectId:", objectId);
+    // console.log("userIdFromRequest:", userIdFromRequest);
     if (!objectId || !userIdFromRequest){
       return res.status(404).json({ error: "User not found, please provide both object id and token" });
     }
@@ -235,11 +236,12 @@ async function getUserByObjectId(req, res) {
       return res.status(200).json({ objectId });
     }
   } catch (err) {
-    console.error("Error in getUserById:", User);
     console.error("Error in getUserById:", err);
     return res.status(500).json("Internal Server Error"+ err );
   }
 }
+
+
 
 
 module.exports = {

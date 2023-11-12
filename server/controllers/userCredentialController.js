@@ -12,8 +12,8 @@ const express = require('express');
 
 // Validation schema for update rfid
 const updateRfidSchema = Joi.object({
-    user_id: Joi.string().required().messages({"string.empty": "Please provide user_id"}),
-    rfid_data: Joi.string().required().messages({"string.empty": "Please provide rfid"}),
+    user_id: Joi.string().required().messages({ "string.empty": "Please provide user_id" }),
+    rfid_data: Joi.string().required().messages({ "string.empty": "Please provide rfid" }),
 });
 
 //Update rfid for user
@@ -31,12 +31,12 @@ const updateRfid = async (req, res) => {
             return res.status(400).send(error.details[0].message);
         }
         // Check if the user exists in the database
-        const user = await User.findOne({user_id : value.user_id});
+        const user = await User.findOne({ user_id: value.user_id });
         if (!user) {
             return res.status(404).send('User not found');
         }
         // Check if the rfid exists in the database
-        const userRfid = await HW_UserCredential.findOne({ rfid_data : value.rfid_data });
+        const userRfid = await HW_UserCredential.findOne({ rfid_data: value.rfid_data });
         if (userRfid) {
             return res.status(409).send('Rfid already exists');
         }
@@ -49,4 +49,27 @@ const updateRfid = async (req, res) => {
     }
 }
 
-module.exports = { updateRfid };
+async function getUserHardwareCredentialbyUserId(req, res) {
+    try {
+        const currentUser = req.user;
+        const {user_id}  = req.body;
+        // Check if the current user is an admin
+        // Check if the user exists in the database
+        const user = await HW_UserCredential.findOne({ user_id: user_id });
+        if (!user) {
+            return res.status(404).send('User not found');
+        }
+        // Get the user hardware credential
+        // if (currentUser.user_id !== user_id) {
+        //     return res.status(403).send('Mismatch user id');
+        // }
+            const userHardwareCredential = await HW_UserCredential.findOne({ user_id });
+            return res.status(200).send(userHardwareCredential);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send('Internal Server Error' + error);
+    }
+}
+
+
+module.exports = { updateRfid, getUserHardwareCredentialbyUserId};

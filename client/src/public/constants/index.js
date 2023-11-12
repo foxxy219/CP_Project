@@ -16,5 +16,7 @@ export const API_ROUTES = {
         deactiveUser: `${API_ENDPOINT}/admin/deactive-user`,
         updateRole: `${API_ENDPOINT}/admin/update-role`,
         updateRFID: `${API_ENDPOINT}/admin/update-rfid`,
+        deleteUserByUserId: `${API_ENDPOINT}/admin/delete-user-by-id`,
+        getUserHardwareCredentialbyUserId: `${API_ENDPOINT}/admin/get-user-hardware-credential-by-user-id`,
     }
 };

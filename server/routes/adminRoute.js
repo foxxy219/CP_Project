@@ -14,6 +14,7 @@ router.post('/change-role', authenticate, adminController.changeUserRole);
 router.post('/test-upload-image', authenticate, adminController.uploadImage);
 // Update user authentication information
 router.post('/update-rifd', authenticate, userCredentialController.updateRfid);
+router.post('/get-user-hardware-credential-by-user-id', userCredentialController.getUserHardwareCredentialbyUserId);
 
 //Delete data, for testing purpose
 router.post('/delete-user', authenticate, DeleteAll.deleteAllUser);

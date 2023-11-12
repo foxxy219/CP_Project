@@ -9,6 +9,7 @@ import 'react-pro-sidebar/dist/css/styles.css';
 import { getCurrentUserFromToken, fetchUserData } from '../../utils/index';
 
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
+import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
 import ContactsOutlinedIcon from "@mui/icons-material/ContactsOutlined";
 import ReceiptOutlinedIcon from "@mui/icons-material/ReceiptOutlined";
@@ -143,7 +144,7 @@ const SidebarLeft = () => {
           <Box paddingLeft={isCollapsed ? undefined : "10%"}>
             <Item
               title="Dashboard"
-              to="/"
+              to="/home"
               icon={<HomeOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
@@ -186,9 +187,9 @@ const SidebarLeft = () => {
               Pages
             </Typography>
             <Item
-              title="Profile Form"
+              title="Create New User"
               to="/home/form"
-              icon={<PersonOutlinedIcon />}
+              icon={<PersonAddAltIcon />}
               selected={selected}
               setSelected={setSelected}
             />

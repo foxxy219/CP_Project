@@ -1,11 +1,13 @@
 import React from 'react';
 
 import { Box, Button, TextField, Select, MenuItem } from '@mui/material';
-import { Formik } from 'formik';
+import { Formik, Form } from 'formik';
+import { useState } from 'react';
 import * as yup from 'yup';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import Header from '../components/Header';
 import axios from 'axios';
+import { API_ROUTES } from '../../public/constants/index';
 
 const initialValues = {
   username: '',
@@ -14,39 +16,41 @@ const initialValues = {
   password: '',
   credential_id: '',
   role: '',
-  profileImage: null,
+  gender: '',
+  contact_phone: '',
+  profile_picture: null,
 };
 
 const phoneRegExp =
   /^((\+[1-9]{1,4}[ -]?)|(\([0-9]{2,3}\)[ -]?)|([0-9]{2,4})[ -]?)*?[0-9]{3,4}[ -]?[0-9]{3,4}$/;
 
-const handleImageUpload = async (files) => {
-  if (files.length === 0) {
-    return;
-  }
+// const handleImageUpload = async (files) => {
+//   if (files.length === 0) {
+//     return;
+//   }
 
-  const formData = new FormData();
-  formData.append('file', files[0]);
+//   const formData = new FormData();
+//   formData.append('file', files[0]);
 
-  try {
-    // Make a POST request to your local API to upload the image
-    const response = await axios.post('http://localhost:4000/api/admin/test-upload-image', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+//   try {
+//     // Make a POST request to your local API to upload the image
+//     const response = await axios.post('http://localhost:4000/api/admin/test-upload-image', formData, {
+//       headers: {
+//         'Content-Type': 'multipart/form-data',
+//       },
+//     });
 
-    // Handle the response, which may contain the Cloudinary image URL
-    const imageUrl = response.data.url;
-    console.log('Image uploaded to Cloudinary:', imageUrl);
+//     // Handle the response, which may contain the Cloudinary image URL
+//     const imageUrl = response.data.url;
+//     console.log('Image uploaded to Cloudinary:', imageUrl);
 
-    // You can save the imageUrl to your form data or state as needed
-    // Example: setFieldValue('profileImage', imageUrl);
-  } catch (error) {
-    console.error('Image upload failed:', error);
-    // Handle any errors here
-  }
-};
+//     // You can save the imageUrl to your form data or state as needed
+//     // Example: setFieldValue('profile_picture', imageUrl);
+//   } catch (error) {
+//     console.error('Image upload failed:', error);
+//     // Handle any errors here
+//   }
+// };
 
 const userSchema = yup.object().shape({
   username: yup.string().required('required'),
@@ -57,29 +61,48 @@ const userSchema = yup.object().shape({
   credential_id: yup.string().required('required'),
   role: yup.string().required('required'),
   gender: yup.string().required('required'),
-  profileImage: yup.mixed().test('isImage', 'Please provide a valid image file', (value) => {
-    return value === null || (value && value.type.startsWith('image/'));
+  profile_picture: yup.mixed().test('isImage', 'Please provide a valid image file', (value) => {
+    return value !== null;
   }),
 });
 
-const Form = () => {
+const FormRegister = () => {
   const isNonMobile = useMediaQuery('(min-width:600px');
   const [imageUrl, setImageUrl] = React.useState(null);
-  const handleFormSubmit = (values) => {
-    // eslint-disable-next-line
+  const [status, setStatus] = useState({ success: null, message: '' });
+  const handleFormSubmit = async (values) => {
     console.log(values);
+    try {
+      const response = await axios.post(
+        API_ROUTES.admin.register, {
+        ...values,
+        credential_id: Number(values.credential_id),
+      },
+        {
+          headers: {
+            'Content-Type': "multipart/form-data",
+            Authorization: 'Bearer ' + localStorage.getItem('token')
+          }
+        }
+      );
+      setStatus({ success: true, message: 'User registered successfully, new user id is: ' + response.data.user_id });
+      console.log(response);
+    }
+    catch (error) {
+      setStatus({ success: false, message: 'Create user fail, please check console to debug' });
+      console.log(error);
+    }
   };
-  console.log('cascasc');
   return (
     <Box m='20px'>
       <Header title='CREATE USER' subtitle='Create a New User Profile' />
       <Formik
-        onSubmit={handleFormSubmit}
         initialValues={initialValues}
         validationSchema={userSchema}
+        onSubmit={handleFormSubmit}
       >
-        {({ values, errors, touched, handleBlur, handleChange, handleSubmit }) => (
-          <form onSubmit={handleSubmit}>
+        {({ values, errors, touched, handleBlur, handleChange, setFieldValue }) => (
+          <Form>
             <Box
               display='grid'
               gap='30px'
@@ -125,7 +148,7 @@ const Form = () => {
                 helperText={touched.contact_phone && errors.contact_phone}
                 sx={{ gridColumn: 'span 1' }}
               />
-              
+
               <Select
                 Choose Gender
                 fullWidth
@@ -134,7 +157,7 @@ const Form = () => {
                 onBlur={handleBlur}
                 onChange={handleChange}
                 value={values.gender}
-                name='Gender'
+                name='gender'
                 error={!!touched.gender && !!errors.gender}
                 helperText={touched.gender && errors.gender}
                 sx={{ gridColumn: 'span 1' }}
@@ -142,7 +165,6 @@ const Form = () => {
                 <MenuItem value=''>Select Gender</MenuItem>
                 <MenuItem value='Male'>Male</MenuItem>
                 <MenuItem value='Female'>Female</MenuItem>
-                {/* Add more role options as needed */}
               </Select>
               <TextField
                 fullWidth
@@ -183,7 +205,7 @@ const Form = () => {
                 helperText={touched.credential_id && errors.credential_id}
                 sx={{ gridColumn: 'span 4' }}
               />
-              
+
               <Select
                 fullWidth
                 variant='filled'
@@ -212,8 +234,9 @@ const Form = () => {
                   hidden
                   onChange={async (e) => {
                     // Upload the image and set the image URL in state
-                    await handleImageUpload(e.target.files);
+                    // await handleImageUpload(e.target.files);
                     setImageUrl(URL.createObjectURL(e.target.files[0]));
+                    setFieldValue("profile_picture", e.target.files[0])
                   }}
                 />
               </Button>
@@ -227,23 +250,29 @@ const Form = () => {
               )}
               {/* <input
                 type="file"
-                name="profileImage"
-                onChange={(event) => setFieldValue("profileImage", event.currentTarget.files[0])}
+                name="profile_picture"
+                onChange={(event) => setFieldValue("profile_picture", event.currentTarget.files[0])}
               />
-              {errors.profileImage && touched.profileImage && (
-                <div>{errors.profileImage}</div>
+              {errors.profile_picture && touched.profile_picture && (
+                <div>{errors.profile_picture}</div>
               )} */}
             </Box>
             <Box display='flex' justifyContent='end' mt='20px'>
-              <Button type='submit' color='secondary' variant='contained'>
-                Crate new user
+              <Button type='submit' color='secondary' variant='contained' >
+                Create new user
               </Button>
             </Box>
-          </form>
+            {/* Display status message */}
+            {status.message && (
+              <Box mt={2} color={status.success ? 'green' : 'red'}>
+                {status.message}
+              </Box>
+            )}
+          </Form>
         )}
       </Formik>
     </Box>
   );
 };
 
-export default Form;
+export default FormRegister;

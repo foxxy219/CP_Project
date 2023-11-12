@@ -50,3 +50,32 @@ export async function fetchUserData(_id) {
   }
 }
 
+export async function fetchUserHardwareCredentail(user_id){
+  const token = localStorage.getItem('token');
+  
+  const config = {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    }
+  };
+
+  const body = {
+    user_id
+  };
+
+  try {
+    const response = await axios.post(API_ROUTES.admin.getUserHardwareCredentialbyUserId , body, config);
+
+    if (response.status === 200) {
+      return response.data;
+    } else {
+      console.error('Failed to fetch user:', response.data.error);
+      return null;
+    }
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    return null;
+  }
+}
+

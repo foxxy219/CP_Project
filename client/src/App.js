@@ -6,6 +6,7 @@ import AuthChecker from './components/AuthChecker';
 import SidebarLeft from './public/global/Sidebar';
 import Topbar from './public/global/Topbar';
 import Form from './public/form/index';
+import Dashboard from './public/dashboard/index';
 import { useState } from 'react';
 import { ColorModeContext, useMode } from './theme';
 import AppLayout from './layout/AppLayout';
@@ -19,7 +20,7 @@ const App = () => {
             <Routes>
                 <Route path="/" element={<AuthChecker />} />
                 <Route path="login" element={<LoginPage />} />
-                <Route path="home" element={<AppLayout></AppLayout>} />
+                <Route path="home" element={<AppLayout><Dashboard/></AppLayout>} />
                 <Route path="home/form" element={<AppLayout><Form /></AppLayout>} />
             </Routes>
         </Router >
