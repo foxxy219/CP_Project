@@ -4,5 +4,5 @@ node_modules/
 build/
 .vscode/
 tmp/
-AI/
+AI/data_set
 ```
