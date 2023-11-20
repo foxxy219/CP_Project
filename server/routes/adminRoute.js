@@ -3,6 +3,8 @@ const router = express.Router();
 const adminController = require('../controllers/adminController');
 const DeleteAll = require('../utils/DeleteAll');
 const userCredentialController = require('../controllers/userCredentialController');
+const resetAttendanceWithoutSaving = require('../utils/StoreAndResetAttendance');
+const getAttendance = require('../controllers/attendanceController');
 const { authenticate } = require('../middleware');
 // Route for creating a new user
 // router.post('/users', userController.createUser);
@@ -21,4 +23,8 @@ router.post('/delete-user', authenticate, DeleteAll.deleteAllUser);
 router.post('/delete-user-credential', authenticate, DeleteAll.deleteAllUserCredential);
 router.post('/delete-attendance', authenticate, DeleteAll.deleteAllAttendance);
 router.post('/delete-user-by-id', authenticate, adminController.deleteUserByUserId);
+
+router.post('/reset-attendance', authenticate, resetAttendanceWithoutSaving.resetAttendanceWithoutSaving);
+router.post('/get-attendance', getAttendance.getAttendance);
+//
 module.exports = router;

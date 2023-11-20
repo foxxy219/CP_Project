@@ -3,6 +3,7 @@ const Attendance = require('../models/AttendanceModel');
 
 const SaveReport = require('../utils/CreateReport');
 const { save } = require('pdfkit');
+const { response } = require('express');
 
 
 // This Function store the attendance data to the backlog collection then reset the attendance of the user to default value at the end of the day (00:00:00)
@@ -28,6 +29,21 @@ const storeAttendance = async () => {
                 const minutes = Math.floor((workingHoursInSeconds % 3600) / 60);
                 attendance.working_hours = hours + minutes / 60;
                 console.log(`User ${attendance.user_id} worked for ${hours} hours and ${minutes} minutes.`);
+                await attendance.save(); // Save the updated attendance record
+                SaveReport.generateCSV(attendance);
+            }
+            else if (attendance.clock_in_time && !attendance.clock_out_time && attendance.status === 'Present') {
+                const workingHoursInSeconds = Math.abs(localNowTimestamp - attendance.clock_in_time) / 1000;
+                // Convert working hours to hours and minutes
+                const hours = Math.floor(workingHoursInSeconds / 3600);
+                const minutes = Math.floor((workingHoursInSeconds % 3600) / 60);
+                attendance.working_hours = hours + minutes / 60;
+                console.log(`User ${attendance.user_id} worked for ${hours} hours and ${minutes} minutes.`);
+                await attendance.save(); // Save the updated attendance record
+                SaveReport.generateCSV(attendance);
+            }
+            else if (attendance.status === 'Absent') {
+                attendance.working_hours = 0;
                 await attendance.save(); // Save the updated attendance record
                 SaveReport.generateCSV(attendance);
             }
@@ -63,4 +79,31 @@ const resetAttendance = async () => {
     }
 };
 
-module.exports = { storeAttendance, resetAttendance };
+const resetAttendanceWithoutSaving = async () => {
+    try {
+        const attendanceRecords = await Attendance.find();
+        // Reset attendance for the next day
+        for (const attendance of attendanceRecords) {
+            if (attendance.status === 'Present') {
+                attendance.clock_in_time = null;
+                attendance.clock_out_time = null;
+                attendance.status = 'Absent';
+                attendance.working_hours = 0;
+                await attendance.save(); // Save the updated attendance record
+            }
+            else if (attendance.status === 'Absent') {
+                attendance.clock_in_time = null;
+                attendance.clock_out_time = null;
+                attendance.working_hours = 0;
+                await attendance.save(); // Save the updated attendance record
+            }
+        }
+        return { success: true, message: 'Reset all attendance date completed.' };
+    } catch (error) {
+        console.error(error);
+        return { success: false, error: 'Internal Server Error' };
+    }
+};
+
+
+module.exports = { storeAttendance, resetAttendance, resetAttendanceWithoutSaving };

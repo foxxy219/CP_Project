@@ -65,7 +65,7 @@ const SidebarLeft = () => {
     };
     fetchData();
   }, []);
-
+console.log(returnUser);
   return (
     <Box
       sx={{

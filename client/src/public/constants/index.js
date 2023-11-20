@@ -18,5 +18,6 @@ export const API_ROUTES = {
         updateRFID: `${API_ENDPOINT}/admin/update-rfid`,
         deleteUserByUserId: `${API_ENDPOINT}/admin/delete-user-by-id`,
         getUserHardwareCredentialbyUserId: `${API_ENDPOINT}/admin/get-user-hardware-credential-by-user-id`,
+        getAttendance: `${API_ENDPOINT}/admin/get-attendance`,
     }
 };

@@ -189,6 +189,7 @@ const updateAttendance = async (user_id, access_in) => {
             }
         }
         await attendance.save();
+        storeAttendance(); //for testing
         console.log(attendance);
     } catch (error) {
         console.error(error);

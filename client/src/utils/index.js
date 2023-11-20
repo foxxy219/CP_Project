@@ -23,7 +23,7 @@ export const getCurrentUserFromToken = async () => {
 
 export async function fetchUserData(_id) {
   const token = localStorage.getItem('token');
-  
+
   const config = {
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -36,7 +36,7 @@ export async function fetchUserData(_id) {
   };
 
   try {
-    const response = await axios.post(API_ROUTES.user.getUserByObjectId , body, config);
+    const response = await axios.post(API_ROUTES.user.getUserByObjectId, body, config);
 
     if (response.status === 200) {
       return response.data;
@@ -50,9 +50,9 @@ export async function fetchUserData(_id) {
   }
 }
 
-export async function fetchUserHardwareCredentail(user_id){
+export async function fetchUserHardwareCredentail(user_id) {
   const token = localStorage.getItem('token');
-  
+
   const config = {
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -65,7 +65,7 @@ export async function fetchUserHardwareCredentail(user_id){
   };
 
   try {
-    const response = await axios.post(API_ROUTES.admin.getUserHardwareCredentialbyUserId , body, config);
+    const response = await axios.post(API_ROUTES.admin.getUserHardwareCredentialbyUserId, body, config);
 
     if (response.status === 200) {
       return response.data;
@@ -79,3 +79,22 @@ export async function fetchUserHardwareCredentail(user_id){
   }
 }
 
+
+export async function getAttendance(user_id) {
+  const body = {
+    user_id
+  }
+  try {
+    const response = await axios.post(API_ROUTES.admin.getAttendance, body, config);
+    if (response.status === 200) {
+      return response.data;
+    } else {
+      console.error('Failed to fetch attendance:', response.data.error);
+      return null;
+    }
+  }
+  catch (error) {
+    console.error('Error fetching attendance:', error);
+    return null;
+  }
+}

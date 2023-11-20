@@ -3,84 +3,71 @@ import React, { useEffect, useState } from 'react';
 import { Box, useTheme } from '@mui/material';
 import { DataGrid, GridColumns, GridToolbar } from '@mui/x-data-grid';
 import { useNavigate } from 'react-router-dom';
-import { getCurrentUserFromToken, fetchUserData } from '../../utils/index';
+import { getCurrentUserFromToken, fetchUserData, getAttendance } from '../../utils/index';
 import { tokens } from '../../theme';
-import { mockDataContacts } from '../ClockInfo/MockData.ts';
+
+// import { mockDataContacts } from '../ClockInfo/MockData.ts';
 import Header from '../components/Header';
 
 const ClockInfo = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const [ReturnUser, setReturnUser] = useState({});
+  const [attendanceData, setAttendanceData] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   const columns = [
-    { field: 'id', headerName: 'ID', flex: 0.5 },
-    { field: 'registrarId', headerName: 'RegistrarId' },
-    { field: 'name', headerName: 'Name', flex: 1, cellClassName: 'name-column--cell' },
-    {
-      field: 'age',
-      headerName: 'Age',
-      type: 'number',
-      headerAlign: 'left',
-      align: 'left'
-    },
-    { field: 'phone', headerName: 'Phone Number', flex: 1 },
-    { field: 'email', headerName: 'Email', flex: 1 },
-    { field: 'address', headerName: 'Address', flex: 1 },
-    { field: 'city', headerName: 'City', flex: 1 },
-    { field: 'zipCode', headerName: 'ZipCode', flex: 1 }
+    { field: 'Full Name', headerName: 'Full Name', flex: 1 },
+    { field: 'Clock In Time', headerName: 'Clock In Time', flex: 1 },
+    { field: 'Clock Out Time', headerName: 'Clock Out Time', flex: 1 },
+    { field: 'Clock In Date', headerName: 'Clock In Date', flex: 1 },
+    { field: 'Clock Out Date', headerName: 'Clock Out Date', flex: 1 },
+    { field: 'Working Hours', headerName: 'Working Hours', flex: 0.5 },
+    { field: 'Status', headerName: 'Status', flex: 0.5 },
   ];
   useEffect(() => {
     const fetchData = async () => {
-      const user = await getCurrentUserFromToken();
-      console.log("done");
-      if (user.userId) {
-        fetchUserData(user.userId)
-          .then(userData => {
-            setReturnUser(userData);
-          })
-          .catch(error => {
-            console.error('Failed to fetch user data:', error);
-          });
-      } else {
-        navigate('/login');
+      try {
+        const user = await getCurrentUserFromToken();
+        if (user.userId) {
+          fetchUserData(user.userId)
+            .then(async (userData) => {
+              const attendanceDataResponse = await getAttendance(userData.objectId.user_id);
+              const attendance = attendanceDataResponse.attendanceData;
+              console.log(attendance);
+
+              if (Array.isArray(attendance)) {
+                // Merge Full Name information from ReturnUser with attendance data
+                const enrichedAttendanceData = attendance.map((attendanceRecord) => ({
+                  ...attendanceRecord,
+                  'Full Name': userData.objectId.full_name, // Replace with the actual property containing the Full Name
+                }));
+                console.log(enrichedAttendanceData);
+                setAttendanceData(enrichedAttendanceData || []); // Set the state with the merged data
+                setReturnUser(userData);
+              } else {
+                console.error('Attendance data is not an array:', attendance);
+              }
+
+              setLoading(false);
+            })
+            .catch((error) => {
+              console.error('Failed to fetch user data:', error);
+              setLoading(false);
+            });
+        } else {
+          // Handle the case where user.userId is not available
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setLoading(false);
       }
     };
+
     fetchData();
   }, []);
-  // const userId = ReturnUser.objectId.user_id;
-  console.log(ReturnUser);
 
-  // useEffect(() => {
-  //   const fetchCSVData = async () => {
-  //     // Replace 'userID' with the actual user ID you want to search for
-  //     const userID = ReturnUser.objectId.user_id; 
-
-  //     // Fetch and parse the CSV data
-  //     try {
-  //       const response = await fetch(`C:\Users\quanb\OneDrive\Desktop\CP_Project\server\attendance_f1166b2c-a802-4697-892d-adaefe2065ac_1970_01.csv`);
-  //       const csv = await response.text();
-
-  //       Papa.parse(csv, {
-  //         header: true,
-  //         dynamicTyping: true,
-  //         complete: (result) => {
-  //           setUserData(result.data);
-  //           setLoading(false);
-  //         },
-  //       });
-  //     } catch (error) {
-  //       console.error('Error loading CSV:', error);
-  //       setLoading(false);
-  //     }
-  //   };
-  //   fetchCSVData();
-  // }, []);
-  // if (loading) {
-  //   return <div>Loading...</div>;
-  // }
   return (
     <Box m='20px'>
       <Header title='CONTACTS' subtitle='List of COntact fo future refrences' />
@@ -113,7 +100,7 @@ const ClockInfo = () => {
           }
         }}
       >
-        <DataGrid rows={mockDataContacts} columns={columns} components={{ Toolbar: GridToolbar }} />
+        <DataGrid getRowId={(row) => row["User ID"]} rows={attendanceData} columns={columns} components={{ Toolbar: GridToolbar }} />
       </Box>
     </Box>
   );
