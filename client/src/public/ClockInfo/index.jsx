@@ -36,20 +36,20 @@ const ClockInfo = () => {
               const attendanceDataResponse = await getAttendance(userData.objectId.user_id);
               const attendance = attendanceDataResponse.attendanceData;
               console.log(attendance);
-
+              setReturnUser(userData);
               if (Array.isArray(attendance)) {
-                // Merge Full Name information from ReturnUser with attendance data
-                const enrichedAttendanceData = attendance.map((attendanceRecord) => ({
+                // Accumulate attendance records in an array
+                const enrichedAttendanceData = attendance.map((attendanceRecord, index) => ({
                   ...attendanceRecord,
-                  'Full Name': userData.objectId.full_name, // Replace with the actual property containing the Full Name
+                  id: `${attendanceRecord["User ID"]}_${attendanceRecord["Clock In Time"]}_${attendanceRecord["Clock In Date"]}_${index}`, // Add an id field
+                  'Full Name': userData.objectId.full_name,
                 }));
                 console.log(enrichedAttendanceData);
                 setAttendanceData(enrichedAttendanceData || []); // Set the state with the merged data
-                setReturnUser(userData);
               } else {
                 console.error('Attendance data is not an array:', attendance);
               }
-
+    
               setLoading(false);
             })
             .catch((error) => {
@@ -100,7 +100,7 @@ const ClockInfo = () => {
           }
         }}
       >
-        <DataGrid getRowId={(row) => row["User ID"]} rows={attendanceData} columns={columns} components={{ Toolbar: GridToolbar }} />
+        <DataGrid getRowId={(row) => row.id} rows={attendanceData} columns={columns} components={{ Toolbar: GridToolbar }} />
       </Box>
     </Box>
   );

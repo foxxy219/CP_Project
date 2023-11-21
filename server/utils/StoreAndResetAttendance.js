@@ -27,7 +27,7 @@ const storeAttendance = async () => {
                 // Convert working hours to hours and minutes
                 const hours = Math.floor(workingHoursInSeconds / 3600);
                 const minutes = Math.floor((workingHoursInSeconds % 3600) / 60);
-                attendance.working_hours = hours + minutes / 60;
+                attendance.working_hours = parseFloat((hours + minutes / 60).toFixed(2));
                 console.log(`User ${attendance.user_id} worked for ${hours} hours and ${minutes} minutes.`);
                 await attendance.save(); // Save the updated attendance record
                 SaveReport.generateCSV(attendance);
@@ -37,7 +37,7 @@ const storeAttendance = async () => {
                 // Convert working hours to hours and minutes
                 const hours = Math.floor(workingHoursInSeconds / 3600);
                 const minutes = Math.floor((workingHoursInSeconds % 3600) / 60);
-                attendance.working_hours = hours + minutes / 60;
+                attendance.working_hours = parseFloat((hours + minutes / 60).toFixed(2));
                 console.log(`User ${attendance.user_id} worked for ${hours} hours and ${minutes} minutes.`);
                 await attendance.save(); // Save the updated attendance record
                 SaveReport.generateCSV(attendance);
