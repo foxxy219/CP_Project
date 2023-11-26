@@ -52,7 +52,7 @@ const updateRfid = async (req, res) => {
 async function getUserHardwareCredentialbyUserId(req, res) {
     try {
         const currentUser = req.user;
-        const {user_id}  = req.body;
+        const { user_id } = req.body;
         // Check if the current user is an admin
         // Check if the user exists in the database
         const user = await HW_UserCredential.findOne({ user_id: user_id });
@@ -63,8 +63,35 @@ async function getUserHardwareCredentialbyUserId(req, res) {
         // if (currentUser.user_id !== user_id) {
         //     return res.status(403).send('Mismatch user id');
         // }
-            const userHardwareCredential = await HW_UserCredential.findOne({ user_id });
-            return res.status(200).send(userHardwareCredential);
+        const userHardwareCredential = await HW_UserCredential.findOne({ user_id });
+        return res.status(200).send(userHardwareCredential);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send('Internal Server Error' + error);
+    }
+}
+
+async function getAllUserHardwareCredential(req, res) {
+    try {
+        // Check if the current user is an admin
+        const user_id = req.body.user_id;
+
+        // Check if the user exists
+        const userExists = await User.exists({ user_id });
+
+        if (!userExists) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Move this line after checking if the user exists
+        const user = await User.findOne({ user_id });
+
+        if (user.role !== 'admin') {
+            return res.status(403).send('You are not authorized to get all user');
+        }
+  
+        const userHardwareCredential = await HW_UserCredential.find().exec();
+        return res.status(200).json({ userHardwareCredential });
     } catch (error) {
         console.error(error);
         return res.status(500).send('Internal Server Error' + error);
@@ -72,4 +99,4 @@ async function getUserHardwareCredentialbyUserId(req, res) {
 }
 
 
-module.exports = { updateRfid, getUserHardwareCredentialbyUserId};
+module.exports = { updateRfid, getUserHardwareCredentialbyUserId, getAllUserHardwareCredential };

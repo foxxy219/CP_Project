@@ -30,47 +30,55 @@ const ClockInfo = () => {
     const fetchData = async () => {
       try {
         const user = await getCurrentUserFromToken();
-        if (user.userId) {
-          fetchUserData(user.userId)
-            .then(async (userData) => {
-              const attendanceDataResponse = await getAttendance(userData.objectId.user_id);
-              const attendance = attendanceDataResponse.attendanceData;
-              console.log(attendance);
-              setReturnUser(userData);
-              if (Array.isArray(attendance)) {
-                // Accumulate attendance records in an array
-                const enrichedAttendanceData = attendance.map((attendanceRecord, index) => ({
-                  ...attendanceRecord,
-                  id: `${attendanceRecord["User ID"]}_${attendanceRecord["Clock In Time"]}_${attendanceRecord["Clock In Date"]}_${index}`, // Add an id field
-                  'Full Name': userData.objectId.full_name,
-                }));
-                console.log(enrichedAttendanceData);
-                setAttendanceData(enrichedAttendanceData || []); // Set the state with the merged data
-              } else {
-                console.error('Attendance data is not an array:', attendance);
-              }
-    
-              setLoading(false);
-            })
-            .catch((error) => {
-              console.error('Failed to fetch user data:', error);
-              setLoading(false);
-            });
-        } else {
-          // Handle the case where user.userId is not available
+
+        if (!user.userId) {
+          // Redirect to login if no user ID is found
+          navigate('/login');
+          return;
         }
+
+        const userData = await fetchUserData(user.userId);
+
+        if (!userData) {
+          // Handle the case where user data couldn't be fetched
+          console.error('Failed to fetch user data');
+          setLoading(false);
+          return;
+        }
+
+        const attendanceDataResponse = await getAttendance(userData.objectId.user_id);
+        const attendance = attendanceDataResponse.attendanceData;
+
+        if (Array.isArray(attendance)) {
+          // Accumulate attendance records in an array
+          const enrichedAttendanceData = attendance.map((attendanceRecord, index) => ({
+            ...attendanceRecord,
+            id: `${attendanceRecord["User ID"]}_${attendanceRecord["Clock In Time"]}_${attendanceRecord["Clock In Date"]}_${index}`, // Add an id field
+            'Full Name': userData.objectId.full_name,
+          }));
+
+          console.log('Enriched Attendance Data:', enrichedAttendanceData);
+          setAttendanceData(enrichedAttendanceData || []); // Set the state with the merged data
+        } else {
+          console.error('Attendance data is not an array:', attendance);
+        }
+
+        setReturnUser(userData);
+        setLoading(false);
       } catch (error) {
+        // Handle token expiration or other errors
         console.error('Error fetching data:', error);
         setLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [navigate]);
+
 
   return (
     <Box m='20px'>
-      <Header title='CONTACTS' subtitle='List of COntact fo future refrences' />
+      <Header title='Clock Infomation' subtitle='List of clock in/ clock out infomation' />
       <Box
         m='40px 0 0 0'
         height='75vh'

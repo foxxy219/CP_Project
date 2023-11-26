@@ -8,15 +8,17 @@ const getAttendance = require('../controllers/attendanceController');
 const { authenticate } = require('../middleware');
 // Route for creating a new user
 // router.post('/users', userController.createUser);
-router.post('/register',authenticate,  adminController.registerForNewUser);
+router.post('/register', adminController.registerForNewUser);
 router.post('/deactive-user', authenticate, adminController.DeactivateUser);
 router.post('/activate-user', authenticate, adminController.ActivateUser);
 router.post('/change-role', authenticate, adminController.changeUserRole);
+router.post('/get-all-user', authenticate, adminController.getAllUsers);
 
 router.post('/test-upload-image', authenticate, adminController.uploadImage);
 // Update user authentication information
 router.post('/update-rifd', authenticate, userCredentialController.updateRfid);
 router.post('/get-user-hardware-credential-by-user-id', userCredentialController.getUserHardwareCredentialbyUserId);
+router.post('/get-all-rfid-data', authenticate, userCredentialController.getAllUserHardwareCredential);
 
 //Delete data, for testing purpose
 router.post('/delete-user', authenticate, DeleteAll.deleteAllUser);

@@ -5,4 +5,5 @@ build/
 .vscode/
 tmp/
 AI/data_set
+AI/arcface_tf2
 ```

@@ -98,3 +98,57 @@ export async function getAttendance(user_id) {
     return null;
   }
 }
+
+export async function getAllUsers(user_id) {
+  const token = localStorage.getItem('token');
+  console.log(token);
+  const body = {
+    user_id
+  }
+  const config = {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    }
+  };
+  try {
+    const response = await axios.post(API_ROUTES.admin.getAllUsers, body, config);
+    if (response.status === 200) {
+      return response.data;
+    } else {
+      console.error('Failed to fetch users:', response.data.error);
+      return null;
+    }
+  }
+  catch (error) {
+    console.error('Error fetching users:', error);
+    return null;
+  }
+}
+
+export async function getAllUserHardwareCredential(user_id) {
+  const token = localStorage.getItem('token');
+  console.log(token);
+  const body = {
+    user_id
+  }
+  const config = {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    }
+  };
+  try {
+    const response = await axios.post(API_ROUTES.admin.getAllRfidData, body, config);
+    if (response.status === 200) {
+      return response.data;
+    } else {
+      console.error('Failed to fetch users:', response.data.error);
+      return null;
+    }
+  }
+  catch (error) {
+    console.error('Error fetching users:', error);
+    return null;
+  }
+}

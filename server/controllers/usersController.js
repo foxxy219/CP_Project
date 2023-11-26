@@ -63,7 +63,7 @@ async function login(req, res) {
     }
 
     // Generate a JWT token for authentication
-    const token = jwt.sign({ userId: user._id }, config.auth.jwtSecretKey, { expiresIn: '1d' });
+    const token = jwt.sign({ userId: user._id }, config.auth.jwtSecretKey, { expiresIn: "3h" });
 
 
     // Send the token in the response
@@ -143,52 +143,52 @@ async function changePassword(req, res) {
 }
 
 
-const Test_signup = async (req, res) => {
-  try {
-    const validate = signupSchema.validate(req.body);
-    if (validate.error) {
-      return res.status(400).json({ error: validate.error.details[0].message });
-    }
-    const salt = bcrypt.genSaltSync(10);
-    const hash = bcrypt.hashSync(req.body.password, salt);
-    const user_id = uuid4();
-    const pinCode = Math.floor(100000 + Math.random() * 900000);
-    //Check for existed email and username
-    const checkExistEmail = await User.find({ email: req.body.email });
-    if (checkExistEmail.length > 0) {
-      console.log("Email existed");
-      return res.status(400).json({ error: 'Email existed' });
-    }
-    const checkExistUsername = await User.find({ username: req.body.username });
-    if (checkExistUsername.length > 0) {
-      console.log("Username existed");
-      return res.status(400).json({ error: 'Username existed' });
-    }
+// const Test_signup = async (req, res) => {
+//   try {
+//     const validate = signupSchema.validate(req.body);
+//     if (validate.error) {
+//       return res.status(400).json({ error: validate.error.details[0].message });
+//     }
+//     const salt = bcrypt.genSaltSync(10);
+//     const hash = bcrypt.hashSync(req.body.password, salt);
+//     const user_id = uuid4();
+//     const pinCode = Math.floor(100000 + Math.random() * 900000);
+//     //Check for existed email and username
+//     const checkExistEmail = await User.find({ email: req.body.email });
+//     if (checkExistEmail.length > 0) {
+//       console.log("Email existed");
+//       return res.status(400).json({ error: 'Email existed' });
+//     }
+//     const checkExistUsername = await User.find({ username: req.body.username });
+//     if (checkExistUsername.length > 0) {
+//       console.log("Username existed");
+//       return res.status(400).json({ error: 'Username existed' });
+//     }
 
-    // Create a new user
-    const newUser = await User.create({ user_id, ...req.body, password: hash });
-    const newUserCredential = await UserCredential.create({ user_id: newUser.user_id, pin_code: pinCode });
-    const { password, ...returnUser } = newUser;
-    // Generate a JWT token for authentication
-    const accessToken = jwt.sign(
-      { id: newUser.id ? newUser.id : newUser._id },
-      config.auth.jwtSecretKey,
-      { expiresIn: '1d' }
-    );
+//     // Create a new user
+//     const newUser = await User.create({ user_id, ...req.body, password: hash });
+//     const newUserCredential = await UserCredential.create({ user_id: newUser.user_id, pin_code: pinCode });
+//     const { password, ...returnUser } = newUser;
+//     // Generate a JWT token for authentication
+//     const accessToken = jwt.sign(
+//       { id: newUser.id ? newUser.id : newUser._id },
+//       config.auth.jwtSecretKey,
+//       { expiresIn: '1d' }
+//     );
 
-    // Send the token in the response
-    const response = {
-      message: 'Signup Success',
-      status: true,
-      user: { ...returnUser?._doc },
-      accessToken: accessToken,
-    };
-    return res.status(200).json(response + "Success");
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json(error);
-  };
-};
+//     // Send the token in the response
+//     const response = {
+//       message: 'Signup Success',
+//       status: true,
+//       user: { ...returnUser?._doc },
+//       accessToken: accessToken,
+//     };
+//     return res.status(200).json(response + "Success");
+//   } catch (error) {
+//     console.log(error);
+//     return res.status(500).json(error);
+//   };
+// };
 
 
 
@@ -248,7 +248,7 @@ module.exports = {
   login,
   logout,
   changePassword,
-  Test_signup,
+  // Test_signup,
   getCurrentUser,
   getUserByObjectId,
 };

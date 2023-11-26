@@ -8,6 +8,8 @@ import Topbar from './public/global/Topbar';
 import Form from './public/form/index';
 import Dashboard from './public/dashboard/index';
 import ClockInfo from './public/ClockInfo/index';
+import Team from './public/team/index';
+import AllUserInfo from './public/AllUsersInfo/index';
 import { useState } from 'react';
 import { ColorModeContext, useMode } from './theme';
 import AppLayout from './layout/AppLayout';
@@ -24,6 +26,8 @@ const App = () => {
                 <Route path="home" element={<AppLayout><Dashboard/></AppLayout>} />
                 <Route path="home/form" element={<AppLayout><Form /></AppLayout>} />
                 <Route path="home/clock-info" element={<AppLayout><ClockInfo /></AppLayout>} />
+                <Route path="home/team" element={<AppLayout><Team /></AppLayout>} />
+                <Route path="home/all-users-info" element={<AppLayout><AllUserInfo /></AppLayout>} />
             </Routes>
         </Router >
     );

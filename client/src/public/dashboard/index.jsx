@@ -16,23 +16,42 @@ const Dashboard = () => {
     const [ReturnUserHardwareCredential, setReturnUserHardwareCredential] = useState({});
     useEffect(() => {
         const fetchData = async () => {
-            const user = await getCurrentUserFromToken();
-            if (user.userId) {
-                fetchUserData(user.userId)
-                    .then(userData => {
-                        fetchUserHardwareCredentail(userData.objectId.user_id).then((data) => {
-                            setReturnUserHardwareCredential(data);
-                        })
-                    })
-                    .catch(error => {
-                        console.error('Failed to fetch user data:', error);
-                    });
-            } else {
+            try {
+                const user = await getCurrentUserFromToken();
+    
+                if (!user.userId) {
+                    // Redirect to login if no user ID is found
+                    navigate('/login');
+                    return;
+                }
+    
+                const userData = await fetchUserData(user.userId);
+    
+                if (!userData) {
+                    // Handle the case where user data couldn't be fetched
+                    console.error('Failed to fetch user data');
+                    return;
+                }
+    
+                // Now, fetch user hardware credentials
+                const hardwareCredentialData = await fetchUserHardwareCredentail(userData.objectId.user_id);
+    
+                if (!hardwareCredentialData) {
+                    // Handle the case where hardware credentials couldn't be fetched
+                    console.error('Failed to fetch user hardware credentials');
+                    return;
+                }
+    
+                setReturnUserHardwareCredential(hardwareCredentialData);
+            } catch (error) {
+                // Handle token expiration or other errors
+                console.error('Failed to authenticate:', error);
                 navigate('/login');
             }
         };
+    
         fetchData();
-    }, []);
+    }, [navigate]);
     const onDownloadClickHandler = () => {
         // eslint-disable-next-line
         alert('Feature in progress! Hold on...');

@@ -7,20 +7,13 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import 'react-pro-sidebar/dist/css/styles.css';
 import { getCurrentUserFromToken, fetchUserData } from '../../utils/index';
-
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
-import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
-import ContactsOutlinedIcon from "@mui/icons-material/ContactsOutlined";
-import ReceiptOutlinedIcon from "@mui/icons-material/ReceiptOutlined";
-import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
 import LockClockIcon from '@mui/icons-material/LockClock';
-import HelpOutlineOutlinedIcon from "@mui/icons-material/HelpOutlineOutlined";
-import BarChartOutlinedIcon from "@mui/icons-material/BarChartOutlined";
-import PieChartOutlineOutlinedIcon from "@mui/icons-material/PieChartOutlineOutlined";
-import TimelineOutlinedIcon from "@mui/icons-material/TimelineOutlined";
+import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
-import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
 
 const Item = ({ title, to, icon, selected, setSelected }) => {
   const theme = useTheme();
@@ -49,23 +42,41 @@ const SidebarLeft = () => {
   const [returnUser, setReturnUser] = useState({}); // Provide a default value
 
   useEffect(() => {
+    let isMounted = true;
     const fetchData = async () => {
-      const user = await getCurrentUserFromToken();
-      if (user.userId) {
-        fetchUserData(user.userId)
-          .then(userData => {
-            setReturnUser(userData);
-          })
-          .catch(error => {
-            console.error('Failed to fetch user data:', error);
-          });
-      } else {
+      try {
+        console.log('Fetching user from token...');
+        const user = await getCurrentUserFromToken();
+        // Check if the token is expired (based on exp claim)
+        const currentTimestamp = Math.floor(Date.now() / 1000); // Convert milliseconds to seconds
+        if (user.exp && user.exp < currentTimestamp) {
+          // Token is expired, redirect to login
+          console.log('Token is expired, redirecting to login...');
+          toast.error('Your session has expired. Please log in again.');
+          alert('Token is expired, please log in again.');
+          navigate('/login');
+          return;
+        }
+        const userData = await fetchUserData(user.userId);
+
+        if (!userData) {
+          // Handle the case where user data couldn't be fetched
+          console.error('Failed to fetch user data');
+          return;
+        }
+        setReturnUser(userData);
+      } catch (error) {
+        // Handle token expiration or other errors
+        console.error('Failed to authenticate:', error);
+        toast.error('An error occurred. Please log in again.');
         navigate('/login');
       }
     };
     fetchData();
+    return () => {
+      isMounted = false;
+    };
   }, []);
-console.log(returnUser);
   return (
     <Box
       sx={{
@@ -121,7 +132,7 @@ console.log(returnUser);
                   alt="profile-user"
                   width="100px"
                   height="100px"
-                  src={`../../assets/user.png`}
+                  src={returnUser.objectId?.profile_picture ? returnUser.objectId?.profile_picture : 'https://www.pngitem.com/pimgs/m/30-307416_profile-icon-png-image-free-download-searchpng-employee.png'}
                   style={{ cursor: "pointer", borderRadius: "50%" }}
                 />
               </Box>
@@ -157,13 +168,13 @@ console.log(returnUser);
             >
               Data
             </Typography>
-            {/* <Item
-              title="Manage Team"
-              to="/team"
+            <Item
+              title="Manage Users"
+              to="/home/team"
               icon={<PeopleOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
-            /> */}
+            />
             <Item
               title="Clock Infomation"
               to="/home/clock-info"
@@ -171,13 +182,13 @@ console.log(returnUser);
               selected={selected}
               setSelected={setSelected}
             />
-            {/* <Item
-              title="Invoices Balances"
-              to="/invoices"
-              icon={<ReceiptOutlinedIcon />}
+            <Item
+              title="All User Info"
+              to="/home/all-users-info"
+              icon={<PeopleOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
-            /> */}
+            />
 
             <Typography
               variant="h6"
@@ -207,48 +218,14 @@ console.log(returnUser);
               selected={selected}
               setSelected={setSelected}
             /> */}
-
-            {/* <Typography
-              variant="h6"
-              color={colors.grey[300]}
-              sx={{ m: "15px 0 5px 20px" }}
-            >
-              Charts
-            </Typography>
-            <Item
-              title="Bar Chart"
-              to="/bar"
-              icon={<BarChartOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-            <Item
-              title="Pie Chart"
-              to="/pie"
-              icon={<PieChartOutlineOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-            <Item
-              title="Line Chart"
-              to="/line"
-              icon={<TimelineOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-            <Item
-              title="Geography Chart"
-              to="/geography"
-              icon={<MapOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            /> */}
           </Box>
         </Menu>
       </ProSidebar>
+      {returnUser && (
+        <ToastContainer />
+      )}
     </Box>
   );
 };
-
 
 export default SidebarLeft;

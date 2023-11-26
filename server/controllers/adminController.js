@@ -70,7 +70,7 @@ const deleteUserByUserId = async (req, res) => {
         // Check if the user exists
         const userExists = await User.exists({ user_id });
 
-        if (!userExists) {po
+        if (!userExists) {
             return res.status(404).json({ error: 'User not found' });
         }
 
@@ -95,9 +95,9 @@ const registerForNewUser = async (req, res) => {
         const currentUser = req.user;
         const pinCode = Math.floor(100000 + Math.random() * 900000);
         // Check if the current user is an admin
-        if (currentUser.role !== 'admin') {
-            return res.status(403).send('You are not authorized to register a new user');
-        }
+        // if (currentUser.role !== 'admin') {
+        //     return res.status(403).send('You are not authorized to register a new user');
+        // }
         const userId = uuid4();
         const imageUploadResponse = await uploadImage(req, res, userId);
 
@@ -252,6 +252,32 @@ const ActivateUser = async (req, res) => {
     }
 }
 
+const getAllUsers = async (req, res) => {
+    try {
+        // Check if the current user is an admin
+        const user_id = req.body.user_id;
+
+        // Check if the user exists
+        const userExists = await User.exists({ user_id });
+
+        if (!userExists) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Move this line after checking if the user exists
+        const user = await User.findOne({ user_id });
+
+        if (user.role !== 'admin') {
+            return res.status(403).send('You are not authorized to get all user');
+        }
+
+        const users = await User.find().exec();
+        return res.status(200).json({ users });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send('Internal Server Error');
+    }
+}
 
 
 module.exports = {
@@ -262,4 +288,5 @@ module.exports = {
     changeUserRole,
     uploadImage,
     deleteUserByUserId,
+    getAllUsers
 };

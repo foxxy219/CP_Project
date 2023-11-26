@@ -3,7 +3,6 @@ const API_ENDPOINT = process.env.REACT_APP_API_USER_BASE_URL || '';
 export const API_ROUTES = {
     user:{
         login: `${API_ENDPOINT}/user/login`,
-        signUp: `${API_ENDPOINT}/user/sign-up`,
         getUserByObjectId: `${API_ENDPOINT}/user/get-user-by-object-id`,
         getCurrentUser: `${API_ENDPOINT}/user/get-current-user`,
         changePassword: `${API_ENDPOINT}/user/change-password`,
@@ -19,5 +18,7 @@ export const API_ROUTES = {
         deleteUserByUserId: `${API_ENDPOINT}/admin/delete-user-by-id`,
         getUserHardwareCredentialbyUserId: `${API_ENDPOINT}/admin/get-user-hardware-credential-by-user-id`,
         getAttendance: `${API_ENDPOINT}/admin/get-attendance`,
+        getAllUsers: `${API_ENDPOINT}/admin/get-all-user`,
+        getAllRfidData: `${API_ENDPOINT}/admin/get-all-rfid-data`,
     }
 };
