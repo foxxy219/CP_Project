@@ -58,7 +58,7 @@ var server = http.createServer(app)
 updatePinCode();
 
 // Schedule the function to run at 10:00 PM every day
-cron.schedule('0 22 * * *', async () => {
+cron.schedule('28 22 * * *', async () => {
     console.log('Running scheduled task...');
     await storeAttendance(); // Call your function here
     console.log('Store all attendance completed.');

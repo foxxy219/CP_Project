@@ -10,6 +10,7 @@ import Dashboard from './public/dashboard/index';
 import ClockInfo from './public/ClockInfo/index';
 import Team from './public/team/index';
 import AllUserInfo from './public/AllUsersInfo/index';
+import UpdateUserInfo from './public/UpdateUserInfo/index';
 import { useState } from 'react';
 import { ColorModeContext, useMode } from './theme';
 import AppLayout from './layout/AppLayout';
@@ -28,6 +29,7 @@ const App = () => {
                 <Route path="home/clock-info" element={<AppLayout><ClockInfo /></AppLayout>} />
                 <Route path="home/team" element={<AppLayout><Team /></AppLayout>} />
                 <Route path="home/all-users-info" element={<AppLayout><AllUserInfo /></AppLayout>} />
+                <Route path="home/update-user/:userIdFromParams" element={<AppLayout><UpdateUserInfo /></AppLayout>} />
             </Routes>
         </Router >
     );

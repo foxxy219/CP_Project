@@ -74,6 +74,37 @@ const checkForL1SecureLevel = async (req, res, next) => {
     }
 }
 
+const checkForL2SecureLevel = async (req, res, next) => {
+    const inCheck = checkInValidTime();
+    
+    if (inCheck) {
+        try {
+            const { user_id, access_status } = req.body;
+
+            if (user_id && access_status === true) {
+                await updateAttendance(user_id, true);
+                return res.status(200).send("Access granted, updated attendance"); // Access granted
+            }
+            else if (access_status === true) {
+                return res.status(400).send("Please provide user_id"); // Access denied
+            }
+            else if (access_status === false) {
+                return res.status(200).send("Access denied, access status is false"); // Access denied
+            }
+            else {
+                return res.status(400).send("Please provide access_status and user_id"); // Access denied
+            }
+        } catch (error) {
+            console.error(error);
+            return res.status(500).send('Internal Server Error: ' + error);
+        }
+    }
+    else {
+        return res.status(400).send('End of checkin or checkout time is 10PM, please try again after 12PM.');
+    }
+}
+
+
 const checkForL1SecureLevelBackup = async (req, res, next) => {
     const inCheck = checkInValidTime();
     if (inCheck) {
@@ -104,7 +135,7 @@ const checkForPinCode = async (pin_code) => {
     }
 
     const userId = userPinCode.user_id;
-    await updateAttendance(userId, true);
+    // await updateAttendance(userId, true);
 
     return { status: 200, message: 'Check for L1 is successful', userId };
 }
@@ -118,7 +149,7 @@ const checkForRFIDData = async (rfid_data) => {
     }
 
     const userId = userRfid.user_id;
-    await updateAttendance(userId, true);
+    // await updateAttendance(userId, true);
 
     return { status: 200, message: 'Check for L1 is successful', userId };
 }
@@ -259,4 +290,4 @@ const updateAccessBackupData = async (dataList) => {
 
 
 
-module.exports = { checkForL1SecureLevel, checkForL1SecureLevelBackup, getAllRFIDData };
+module.exports = { checkForL1SecureLevel, checkForL1SecureLevelBackup, checkForL2SecureLevel, getAllRFIDData };

@@ -6,6 +6,7 @@ const { authenticate } = require('../middleware');
 router.post('/check-for-l1', hardwareRequestController.checkForL1SecureLevel);
 router.post('/check-for-l1-backup', hardwareRequestController.checkForL1SecureLevelBackup);
 router.get('/get-all-rfid-data', authenticate, hardwareRequestController.getAllRFIDData);
+router.post('/check-for-l2', hardwareRequestController.checkForL2SecureLevel);
 
 
 module.exports = router;

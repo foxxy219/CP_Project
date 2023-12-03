@@ -24,28 +24,6 @@ const userSchema = new mongoose.Schema({
   timestamps: true,
 });
 
-// const UserSchema = new mongoose.Schema(
-//   {
-//     username: { type: String, required: true },
-//     email: { type: String, require: true },
-//     password: { type: String, required: true, default: "" },
-//     online: { type: Boolean, default: false },
-//     avatar: { type: String, default: "", require: false },
-//     credentialid: { type: number, default: "" },
-//     address: { type: String, default: "" },
-//     phoneNumber: { type: number, deafault: "" },
-//     isActivated: { type: Boolean, default: false },
-//     startTime: { type: Date, defautlt: new Date() },
-//     isDeleted: { type: Boolean, default: false },
-//     role: { type: String, default: "user" },
-//     date_of_birth: { type: Date, default: Date.now },
-//     userId: { type: string, default: "", generate: "uuid" },
-//   },
-//   {
-//     timestamps: true,
-//   }
-// );
-
 userSchema.plugin(mongoosePaginate);
 
 const User = mongoose.model("User", userSchema);

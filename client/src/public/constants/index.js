@@ -20,5 +20,6 @@ export const API_ROUTES = {
         getAttendance: `${API_ENDPOINT}/admin/get-attendance`,
         getAllUsers: `${API_ENDPOINT}/admin/get-all-user`,
         getAllRfidData: `${API_ENDPOINT}/admin/get-all-rfid-data`,
+        updateUserInfo: `${API_ENDPOINT}/admin/update-user/`,
     }
 };

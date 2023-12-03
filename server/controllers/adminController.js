@@ -51,6 +51,24 @@ const signupSchema = Joi.object({
     isActivated: Joi.boolean(),
 }, { timestamps: true });
 
+const signupSchemaForUpdate = Joi.object({
+    user_id: Joi.string().required(),
+    username: Joi.string().required(),
+    email: Joi.string().email().required(),
+    password: Joi.string(),
+    full_name: Joi.string().required(),
+    date_of_birth: Joi.date(),
+    credential_id: Joi.number().unsafe().required(),
+    gender: Joi.string().required(),
+    profile_picture: Joi.string(),
+    location: Joi.string(),
+    contact_email: Joi.string(),
+    contact_phone: Joi.string(),
+    role: Joi.string().required(),
+    isActivated: Joi.boolean(),
+    rfid_data: Joi.string(),
+}, { timestamps: true });
+
 const changeRoleSchema = Joi.object({
     user_id: Joi.string().required(),
     role: Joi.string().required(),
@@ -84,7 +102,7 @@ const deleteUserByUserId = async (req, res) => {
         return res.status(200).json({ message: 'User deleted successfully' });
     } catch (error) {
         console.error(error);
-        return res.status(500).send('Internal Server Error');
+        return res.status(500).send('Internal Server Error' + error);
     }
 };
 
@@ -279,6 +297,58 @@ const getAllUsers = async (req, res) => {
     }
 }
 
+const updateUserInfo = async (req, res) => {
+    try {
+        const userId = req.body.user_id;
+        const { error, value } = signupSchemaForUpdate.validate(req.body);
+
+        if (error) {
+            return res.status(400).json(error.details); // Use res.status(status).json(obj)
+        }
+
+        const userExists = await User.exists({ user_id: userId });
+
+        if (!userExists) {
+            return res.status(404).json({ error: 'User not found' }); // Use res.status(status).json(obj)
+        }
+
+        // Hash the new password if provided
+        let hashedPassword = value.password;
+        if (value.password) {
+            hashedPassword = await bcrypt.hash(value.password, 10);
+        }
+
+        // Update information in the User collection
+        await User.findOneAndUpdate({ user_id: userId }, {
+            username: value.username,
+            email: value.email,
+            full_name: value.full_name,
+            password: hashedPassword,
+            date_of_birth: value.date_of_birth,
+            credential_id: value.credential_id,
+            gender: value.gender,
+            profile_picture: value.profile_picture,
+            location: value.location,
+            contact_email: value.contact_email,
+            contact_phone: value.contact_phone,
+            role: value.role,
+            isActivated: value.isActivated,
+        });
+
+        // Update password in the UserCredential collection (assuming there is a password field)
+        await UserCredential.findOneAndUpdate({ user_id: userId }, {
+            rfid_data: value.rfid_data,
+        });
+
+        return res.status(200).json({ message: 'User information updated successfully', data: value }); // Use res.status(status).json(obj)
+    }
+    catch (error) {
+        console.error(error);
+        return res.status(500).json('Internal Server Error'); // Use res.status(status).json(obj)
+    }
+}
+
+
 
 module.exports = {
     registerForNewUser,
@@ -288,5 +358,6 @@ module.exports = {
     changeUserRole,
     uploadImage,
     deleteUserByUserId,
-    getAllUsers
+    getAllUsers,
+    updateUserInfo,
 };

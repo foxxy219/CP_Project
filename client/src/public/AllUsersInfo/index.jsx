@@ -6,6 +6,8 @@ import { getCurrentUserFromToken, fetchUserData, getAllUserHardwareCredential, g
 import { tokens } from '../../theme';
 import Header from '../components/Header';
 
+
+
 const AllUserInfo = () => {
     const theme = useTheme();
     const colors = tokens(theme.palette.mode);
@@ -14,12 +16,31 @@ const AllUserInfo = () => {
     const navigate = useNavigate();
 
     const columns = [
-        { field: 'user_id', headerName: 'User ID', flex: 1 },
+        { field: 'user_id', headerName: 'User ID', flex: 1.5 },
+        { field: 'full_name', headerName: 'Full Name', flex: 1 },
+        { field: 'gender', headerName: 'Gender', flex: 0.5 },
         { field: 'username', headerName: 'Username', flex: 1 },
         { field: 'rfid_data', headerName: 'RFID Data', flex: 1 },
         { field: 'contact_phone', headerName: 'Phone Number', flex: 1 },
+        { field: 'location', headerName: 'Location', flex: 1 },
+        {
+            field: 'update',
+            headerName: 'Update',
+            flex: 1,
+            renderCell: (params) => (
+                <button onClick={() => handleUpdate(params.row)}>
+                    Update
+                </button>
+            ),
+        },
         // Add more fields as needed
     ];
+    const handleUpdate = (user) => {
+        // Implement your logic to handle the update, e.g., open a modal or navigate to an update page
+        console.log('Updating user:', user);
+        // Example: Navigate to the update page with the user ID
+        navigate(`../home/update-user/${user.user_id}`);
+    };
 
     // Declare mergedData in the component's scope
     const [mergedData, setMergedData] = useState([]);
@@ -44,12 +65,11 @@ const AllUserInfo = () => {
                     return;
                 }
                 console.log('User Data:', userData);
-                const hardwareCredentialResponse = await getAllUserHardwareCredential(user.userId);
-                console.log('Hardware Credentials:', hardwareCredentialResponse);
+                const hardwareCredentialResponse = await getAllUserHardwareCredential(userData.objectId.user_id);
                 const hardwareCredentials = hardwareCredentialResponse.userHardwareCredential;
                 console.log('Hardware Credentials:', hardwareCredentials);
 
-                const allUsersResponse = await getAllUsers(user.userId);
+                const allUsersResponse = await getAllUsers(userData.objectId.user_id);
                 const allUsers = allUsersResponse.users;
                 console.log('All Users:', allUsers);
 
@@ -59,6 +79,7 @@ const AllUserInfo = () => {
                     return {
                         ...user,
                         rfid_data: hardwareCredential ? hardwareCredential.rfid_data : null,
+                        id: `${user.user_id}_${user.username}`, // Add an id field
                     };
                 });
                 console.log('Merged Data:', mergedData);
@@ -76,7 +97,6 @@ const AllUserInfo = () => {
                 setLoading(false);
             }
         };
-
         fetchData();
     }, [navigate]);
 
@@ -112,7 +132,7 @@ const AllUserInfo = () => {
                     }
                 }}
             >
-                <DataGrid rows={mergedData} columns={columns} components={{ Toolbar: GridToolbar }} />
+                <DataGrid getRowId={(row) => row.id} rows={mergedData} columns={columns} components={{ Toolbar: GridToolbar }} />
             </Box>
         </Box>
     );

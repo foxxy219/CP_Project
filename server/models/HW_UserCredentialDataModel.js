@@ -4,7 +4,6 @@ const UserAuthCredentialSchema = new mongoose.Schema({
     user_id: { type: String, required: true },
     pin_code : { type: Number, required: true },
     rfid_data : { type: String },
-    face_data : { type: String },
 },
 {
     timestamps: true,

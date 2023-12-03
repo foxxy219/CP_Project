@@ -7,22 +7,43 @@ const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 
 
 function isoDate(userAttendance) {
+    if (!userAttendance) {
+        // Get the current date
+        const date = new Date();
+        const isoDate = date.toISOString().split('T')[0];
+        return isoDate;
+    }
+
     const date = new Date(userAttendance);
     const isoDate = date.toISOString().split('T')[0];
     return isoDate;
 }
 
 function isoTime(userAttendance) {
+    if (!userAttendance) {
+        // If userAttendance is null or undefined, return null
+        console.error('Invalid userAttendance object. Cannot convert null or undefined to ISO time.');
+        return null;
+    }
+
     const date = new Date(userAttendance);
     const isoTime = date.toISOString().split('T')[1].split('.')[0];
     return isoTime;
 }
 
 function isoMonthandYear(userAttendance) {
+    if (!userAttendance) {
+        // if userAttendance is null or undefined, return the current month and year
+        const date = new Date();
+        const isoMonthandYear = date.toISOString().split('T')[0].split('-')[0] + "_" + date.toISOString().split('T')[0].split('-')[1];
+        return isoMonthandYear;
+    }
+
     const date = new Date(userAttendance);
     const isoMonthandYear = date.toISOString().split('T')[0].split('-')[0] + "_" + date.toISOString().split('T')[0].split('-')[1];
     return isoMonthandYear;
 }
+
 
 // Function to generate a PDF file for a user's attendance
 async function generatePDF(userAttendance) {

@@ -77,6 +77,9 @@ const SidebarLeft = () => {
       isMounted = false;
     };
   }, []);
+
+  const isAdmin = returnUser.objectId?.role === 'admin';
+  const isManager = returnUser.objectId?.role === 'manager';
   return (
     <Box
       sx={{
@@ -168,13 +171,24 @@ const SidebarLeft = () => {
             >
               Data
             </Typography>
-            <Item
-              title="Manage Users"
-              to="/home/team"
-              icon={<PeopleOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
+            {isAdmin && (
+              <>
+                <Item
+                  title="Manage Users"
+                  to="/home/team"
+                  icon={<PeopleOutlinedIcon />}
+                  selected={selected}
+                  setSelected={setSelected}
+                />
+                <Item
+                  title="All User Info"
+                  to="/home/all-users-info"
+                  icon={<PeopleOutlinedIcon />}
+                  selected={selected}
+                  setSelected={setSelected}
+                />
+              </>
+            )}
             <Item
               title="Clock Infomation"
               to="/home/clock-info"
@@ -182,28 +196,26 @@ const SidebarLeft = () => {
               selected={selected}
               setSelected={setSelected}
             />
-            <Item
-              title="All User Info"
-              to="/home/all-users-info"
-              icon={<PeopleOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
+            {isAdmin && (
+              <>
+                <Typography
+                  variant="h6"
+                  color={colors.grey[300]}
+                  sx={{ m: "15px 0 5px 20px" }}
+                >
+                  Pages
+                </Typography>
+                <Item
+                  title="Create New User"
+                  to="/home/form"
+                  icon={<PersonAddAltIcon />}
+                  selected={selected}
+                  setSelected={setSelected}
+                />
+              </>
+            )}
 
-            <Typography
-              variant="h6"
-              color={colors.grey[300]}
-              sx={{ m: "15px 0 5px 20px" }}
-            >
-              Pages
-            </Typography>
-            <Item
-              title="Create New User"
-              to="/home/form"
-              icon={<PersonAddAltIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
+
             {/* <Item
               title="Calendar"
               to="/calendar"

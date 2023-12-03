@@ -2,7 +2,6 @@ const mongoose = require("mongoose");
 
 const attendanceSchema = new mongoose.Schema({
     user_id: { type: String, required: true },
-    event_id: { type: String },
     access_in: { type: Boolean},
     date: { type: Date },
     clock_in_time: { type: Date },
