@@ -13,8 +13,8 @@ const HourMinSecfromLocalNow = localNow.getHours() + ":" + localNow.getMinutes()
 // get all rfid_data in HW_UserCredentialDataModel
 async function getRFID() {
     try {
-        const rfidData = await HW_UserCredential.find({}, { rfid_data: 1, _id: 0 });
-        return rfidData;
+        const userIdAndRFID = await HW_UserCredential.find({}, { user_id: 2, rfid_data: 1, _id: 0 });
+        return userIdAndRFID;
     } catch (error) {
         console.error(error);
         throw error;
@@ -23,8 +23,8 @@ async function getRFID() {
 
 const getAllRFIDData = async (req, res, next) => {
     try {
-        const rfidData = await getRFID();
-        return res.status(200).send({ rfidData });
+        const userIdAndRFID = await getRFID();
+        return res.status(200).send({ userIdAndRFID });
     } catch (error) {
         console.error(error);
         return res.status(500).send('Internal Server Error: ' + error);
@@ -55,12 +55,12 @@ const checkForL1SecureLevel = async (req, res, next) => {
 
             if (pin_code) {
                 const result = await checkForPinCode(pin_code);
-                return res.status(result.status).send({ userId: result.userId, message: result.message });
+                return res.status(result.status).send({ user_id: result.userId, message: result.message });
             }
 
             if (rfid_data) {
                 const result = await checkForRFIDData(rfid_data);
-                return res.status(result.status).send({ userId: result.userId, message: result.message });
+                return res.status(result.status).send({ user_id: result.userId, message: result.message });
             }
 
             return res.status(400).send('Please provide RFID or PIN code.');

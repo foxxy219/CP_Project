@@ -299,9 +299,10 @@ const getAllUsers = async (req, res) => {
 
 const updateUserInfo = async (req, res) => {
     try {
+        // return res.status(200).json({ message: 'cac' }); // Use res.status(status).json(obj)
         const userId = req.body.user_id;
         const { error, value } = signupSchemaForUpdate.validate(req.body);
-
+        console.log(value);
         if (error) {
             return res.status(400).json(error.details); // Use res.status(status).json(obj)
         }
@@ -311,13 +312,14 @@ const updateUserInfo = async (req, res) => {
         if (!userExists) {
             return res.status(404).json({ error: 'User not found' }); // Use res.status(status).json(obj)
         }
-
+        console.log("User exsit")
         // Hash the new password if provided
         let hashedPassword = value.password;
         if (value.password) {
             hashedPassword = await bcrypt.hash(value.password, 10);
         }
 
+        console.log("updating")
         // Update information in the User collection
         await User.findOneAndUpdate({ user_id: userId }, {
             username: value.username,
@@ -334,7 +336,7 @@ const updateUserInfo = async (req, res) => {
             role: value.role,
             isActivated: value.isActivated,
         });
-
+        console.log("finding user credential")
         // Update password in the UserCredential collection (assuming there is a password field)
         await UserCredential.findOneAndUpdate({ user_id: userId }, {
             rfid_data: value.rfid_data,

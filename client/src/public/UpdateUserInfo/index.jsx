@@ -78,6 +78,7 @@ const UpdateUserInfo = () => {
                 // Set the initial values for the form
                 setInitialValues({
                     ...userInfoFromParam[0],
+                    rfid_data: userHardwareCredential[0].rfid_data,
                     // exclude password from the form
                     password: '',
                 });
@@ -111,7 +112,7 @@ const UpdateUserInfo = () => {
             if (filteredValues.password === ''){
             delete filteredValues.password;
             }
-
+            console.log('Filtered Values:', filteredValues);
             const response = await updateUserInfo(userIdFromParams, filteredValues);
             if (response) {
                 // Handle success, e.g., show a success message or redirect to another page
@@ -229,6 +230,19 @@ const UpdateUserInfo = () => {
                                 fullWidth
                                 variant='filled'
                                 type='text'
+                                label='RDIF Data'
+                                onBlur={handleBlur}
+                                onChange={handleChange}
+                                value={values.rfid_data}
+                                name='rfid_data'
+                                error={!!touched.rfid_data && !!errors.rfid_data}
+                                helperText={touched.rfid_data && errors.rfid_data}
+                                sx={{ gridColumn: 'span 1' }}
+                            />
+                            <TextField
+                                fullWidth
+                                variant='filled'
+                                type='text'
                                 label='Password'
                                 onBlur={handleBlur}
                                 onChange={handleChange}
@@ -265,8 +279,8 @@ const UpdateUserInfo = () => {
                                 sx={{ gridColumn: 'span 1' }}
                             >
                                 <MenuItem value=''>Select Role</MenuItem>
-                                <MenuItem value='manager'>Manager</MenuItem>
-                                <MenuItem value='user'>User</MenuItem>
+                                <MenuItem value='Manager'>Manager</MenuItem>
+                                <MenuItem value='User'>User</MenuItem>
                             </Select>
 
                             <Button
@@ -305,7 +319,7 @@ const UpdateUserInfo = () => {
                         </Box>
                         <Box display='flex' justifyContent='end' mt='20px'>
                             <Button type='submit' color='secondary' variant='contained' >
-                                Create new user
+                                Update for selected user
                             </Button>
                         </Box>
                         {/* Display status message */}

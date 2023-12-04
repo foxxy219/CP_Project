@@ -130,7 +130,7 @@ export async function getAllUsers(user_id) {
 export async function getAllUserHardwareCredential(user_id) {
   const token = localStorage.getItem('token');
   console.log(token);
-  console.log('User ID:', user_id); 
+  console.log('User ID:', user_id);
   const body = {
     user_id
   }
@@ -160,17 +160,22 @@ export async function updateUserInfo(user_id, data) {
   console.log(token);
   console.log('User ID:', user_id);
   console.log('Data:', data);
-  const body = {
-    data
-  }
+
+  const formData = new FormData();
+
+  // Append each key-value pair to the FormData object
+  Object.entries(data).forEach(([key, value]) => {
+    formData.append(key, value);
+  })
+  console.log('FormData:', formData);
   const config = {
     headers: {
       'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
+      'Content-Type': 'multipart/form-data',
     }
   };
   try {
-    const response = await axios.put(API_ROUTES.admin.updateUserInfo + user_id, body, config);
+    const response = await axios.post(API_ROUTES.admin.updateUserInfo + user_id, formData, config);
     if (response.status === 200) {
       return response.data;
     } else {

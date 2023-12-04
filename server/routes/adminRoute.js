@@ -30,5 +30,5 @@ router.post('/reset-attendance', authenticate, resetAttendanceWithoutSaving.rese
 router.post('/get-attendance', getAttendance.getAttendance);
 
 // Update user information
-router.put('/update-user/:user_id', authenticate, adminController.updateUserInfo);
+router.post('/update-user/:user_id', authenticate, adminController.updateUserInfo);
 module.exports = router;
