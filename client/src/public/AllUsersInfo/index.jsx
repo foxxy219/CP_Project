@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, useTheme } from '@mui/material';
+import { Box, Button, useTheme } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUserFromToken, fetchUserData, getAllUserHardwareCredential, getAllUsers } from '../../utils/index';
@@ -25,12 +25,17 @@ const AllUserInfo = () => {
         { field: 'location', headerName: 'Location', flex: 1 },
         {
             field: 'update',
-            headerName: 'Update',
+            headerName: '',
             flex: 1,
             renderCell: (params) => (
-                <button onClick={() => handleUpdate(params.row)}>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => handleUpdate(params.row)}
+                    style={{ marginLeft: '8px' }}
+                >
                     Update
-                </button>
+                </Button>
             ),
         },
         // Add more fields as needed
@@ -102,7 +107,7 @@ const AllUserInfo = () => {
 
     return (
         <Box m='20px'>
-            <Header title='Clock Information' subtitle='List of clock in/clock out information' />
+            <Header title='All User Information' subtitle='List of user information in the system' />
             <Box
                 m='40px 0 0 0'
                 height='75vh'

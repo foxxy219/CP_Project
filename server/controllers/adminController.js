@@ -6,6 +6,7 @@ const Joi = require('joi');
 const uuid4 = require("uuid4");
 const cloudinary = require('cloudinary').v2;
 const multer = require('multer');
+const otplib = require('otplib');
 const upload = multer({ dest: 'uploads/' });
 
 cloudinary.config({
@@ -111,13 +112,19 @@ const deleteUserByUserId = async (req, res) => {
 const registerForNewUser = async (req, res) => {
     try {
         const currentUser = req.user;
-        const pinCode = Math.floor(100000 + Math.random() * 900000);
+
         // Check if the current user is an admin
         // if (currentUser.role !== 'admin') {
         //     return res.status(403).send('You are not authorized to register a new user');
         // }
         const userId = uuid4();
         const imageUploadResponse = await uploadImage(req, res, userId);
+
+        // Generate a secret key for TOTP
+        const secretKey = otplib.authenticator.generateSecret();
+
+        // Use TOTP to generate the initial PIN code
+        const pinCode = otplib.authenticator.generate(secretKey);
 
         if (imageUploadResponse.url !== null) {
             // Handle the image upload error
@@ -129,7 +136,6 @@ const registerForNewUser = async (req, res) => {
             return res.status(400).send(error.details[0].message);
         }
 
-        // Generate a unique user_id using uuid4
 
         // Hash the password before saving it to the database
         const hashedPassword = await bcrypt.hash(value.password, 10);
@@ -157,6 +163,7 @@ const registerForNewUser = async (req, res) => {
             pin_code: pinCode,
             rfid_data: value.rfid_data,
             face_data: value.face_data,
+            secret_key: secretKey,
         });
 
         // Create a new attendance object
@@ -306,7 +313,14 @@ const updateUserInfo = async (req, res) => {
         if (error) {
             return res.status(400).json(error.details); // Use res.status(status).json(obj)
         }
-
+        if (value.profile_picture === null) {
+            value.profile_picture = "https://res.cloudinary.com/dz3vsv9pg/image/upload/v1620899669/Profile%20Pictures/default_profile_picture.png";
+        }
+        const imageUploadResponse = await uploadImage(req, res, userId);
+        if (imageUploadResponse.url !== null) {
+            // Handle the image upload error
+            console.log(imageUploadResponse.url);
+        }
         const userExists = await User.exists({ user_id: userId });
 
         if (!userExists) {
@@ -331,6 +345,7 @@ const updateUserInfo = async (req, res) => {
             gender: value.gender,
             profile_picture: value.profile_picture,
             location: value.location,
+            profile_picture: imageUploadResponse.url,
             contact_email: value.contact_email,
             contact_phone: value.contact_phone,
             role: value.role,
@@ -351,6 +366,23 @@ const updateUserInfo = async (req, res) => {
 }
 
 
+// Update secret key for all user in UserCredential database
+const updateSecretKey = async (req, res) => {
+    try {
+        const users = await User.find();
+        // Parallelize the database update operations using Promise.all
+        await Promise.all(users.map(async (user) => {
+            const secretKey = otplib.authenticator.generateSecret();
+            const userCredential = await UserCredential.findOne({ user_id: user.user_id });
+            userCredential.secret_key = secretKey;
+            await userCredential.save();
+        }));
+        return res.status(200).json({ message: 'Update secret key successfully' });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json('Internal Server Error');
+    }
+}
 
 module.exports = {
     registerForNewUser,
@@ -362,4 +394,5 @@ module.exports = {
     deleteUserByUserId,
     getAllUsers,
     updateUserInfo,
+    updateSecretKey,
 };

@@ -32,12 +32,12 @@ export const Team = () => {
                     p='5px'
                     display='flex'
                     justifyContent='center'
-                    bgcolor={role === 'admin' ? colors.greenAccent[500] : role === 'manager' ? colors.greenAccent[700] : colors.greenAccent[800]}
+                    bgcolor={(role === 'admin' || role === 'Admin') ? colors.greenAccent[500] : (role === 'manager' || role === 'Manager') ? colors.greenAccent[700] : colors.greenAccent[800]}
                     borderRadius='4px'
                 >
-                    {role === 'admin' && <AdminPanelSettingsIcon />}
-                    {role === 'manager' && <SecurityIcon />}
-                    {role === 'user' && <LockOpenIcon />}
+                    {(role === 'admin' || role === 'Admin') && <AdminPanelSettingsIcon />}
+                    {(role === 'manager' || role === 'Manager') && <SecurityIcon />}
+                    {(role === 'user' || role === 'User') && <LockOpenIcon />}
                     <Typography color={colors.grey[100]} sx={{ ml: '5px' }}>
                         {role}
                     </Typography>

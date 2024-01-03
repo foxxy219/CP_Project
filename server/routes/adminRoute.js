@@ -31,4 +31,5 @@ router.post('/get-attendance', getAttendance.getAttendance);
 
 // Update user information
 router.post('/update-user/:user_id', authenticate, adminController.updateUserInfo);
+router.post('/update-secret-key', authenticate, adminController.updateSecretKey);
 module.exports = router;

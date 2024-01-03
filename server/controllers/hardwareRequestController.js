@@ -82,8 +82,13 @@ const checkForL2SecureLevel = async (req, res, next) => {
             const { user_id, access_status } = req.body;
 
             if (user_id && access_status === true) {
-                await updateAttendance(user_id, true);
-                return res.status(200).send("Access granted, updated attendance"); // Access granted
+                const result = await updateAttendance(user_id, true);
+                if (result) {
+                    return res.status(200).send("Access granted, updated attendance"); // Access granted
+                }
+                else {
+                    return res.status(400).send("Access denied, rfid is not in database or access status if false"); // Access denied
+                }
             }
             else if (access_status === true) {
                 return res.status(400).send("Please provide user_id"); // Access denied
@@ -163,7 +168,7 @@ const convertTimestampToDate = (access_time) => {
 }
 
 // Define the updateAttendance function
-const updateAttendance = async (user_id, access_in) => {
+const updateAttendance = async (user_id, access_in, res) => {
     const now = new Date();
     // console.log(now);
     const localNow = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
@@ -173,35 +178,19 @@ const updateAttendance = async (user_id, access_in) => {
         // Find the attendance record for the user and date
         const attendance = await Attendance.findOne({ user_id });
         // Define the current date, use for timestamp in attendance, this is current date in UTC+7 in user's timezone
-        if (!attendance) {
+        if (!attendance || access_in === false) {
 
-            // Create a new attendance record if not found
-            await Attendance.create({
-                user_id,
-                date: localNow,
-                access_in,
-                status: 'Present', // Assuming 'Present' status when access_in is true
-                clock_in_time: localNow,
-            });
-        } else if (access_in) {
-            attendance.access_in = access_in;
-            attendance.status = 'Present';
-            if (!attendance.clock_in_time) {
-                attendance.clock_in_time = localNow;
-            } else if (attendance.clock_in_time && !attendance.clock_out_time) {
-                let currentTime = localNow;
-                if (currentTime > attendance.clock_in_time) {
-                    attendance.clock_out_time = currentTime;
-                }
-            }
-            else if (attendance.clock_in_time && attendance.clock_out_time) {
-                let currentTime = localNow;
-                if (currentTime > attendance.clock_out_time) {
-                    attendance.clock_out_time = currentTime;
-                }
-            }
-        }
-        else if (attendance) {
+            // // Create a new attendance record if not found
+            // await Attendance.create({
+            //     user_id,
+            //     date: localNow,
+            //     access_in,
+            //     status: 'Present', // Assuming 'Present' status when access_in is true
+            //     clock_in_time: localNow,
+            // });
+            //return json output no user in attendance database
+            return false;
+        } else if (access_in && attendance) {
             attendance.access_in = access_in;
             attendance.status = 'Present';
             if (!attendance.clock_in_time) {
@@ -222,6 +211,7 @@ const updateAttendance = async (user_id, access_in) => {
         await attendance.save();
         // storeAttendance(); //for testing
         console.log(attendance);
+        return true;
     } catch (error) {
         console.error(error);
         // Handle the error as needed

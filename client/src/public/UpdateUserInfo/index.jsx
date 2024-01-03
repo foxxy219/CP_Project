@@ -108,7 +108,6 @@ const UpdateUserInfo = () => {
 
             // Remove specific fields that you don't want to include in the request
             delete filteredValues.isActivated;
-            delete filteredValues.profile_picture;
             if (filteredValues.password === ''){
             delete filteredValues.password;
             }
