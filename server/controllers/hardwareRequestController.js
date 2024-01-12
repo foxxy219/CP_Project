@@ -3,6 +3,7 @@ const HW_UserCredential = require('../models/HW_UserCredentialDataModel');
 const Attendance = require('../models/AttendanceModel');
 const { date, bool, boolean } = require('joi');
 const { storeAttendance } = require('../utils/StoreAndResetAttendance');
+const { save } = require('pdfkit');
 
 
 const TimeNow = new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' });
@@ -35,7 +36,7 @@ const getAllRFIDData = async (req, res, next) => {
 
 function checkInValidTime() {
     if (HourMinSecfromLocalNow > '22:00:00' && HourMinSecfromLocalNow < '23:59:59') {
-        return false;
+        return true;
     }
     else {
         return true;
@@ -81,7 +82,7 @@ const checkForL2SecureLevel = async (req, res, next) => {
         try {
             const { user_id, access_status } = req.body;
 
-            if (user_id && access_status === true) {
+            if ((user_id && access_status === true) || (user_id && access_status === "true")) {
                 const result = await updateAttendance(user_id, true);
                 if (result) {
                     return res.status(200).send("Access granted, updated attendance"); // Access granted
@@ -90,10 +91,10 @@ const checkForL2SecureLevel = async (req, res, next) => {
                     return res.status(400).send("Access denied, rfid is not in database or access status if false"); // Access denied
                 }
             }
-            else if (access_status === true) {
+            else if ((access_status === true) || (access_status === "true")) {
                 return res.status(400).send("Please provide user_id"); // Access denied
             }
-            else if (access_status === false) {
+            else if ((access_status === false) || (access_status === "false")) {
                 return res.status(200).send("Access denied, access status is false"); // Access denied
             }
             else {
@@ -207,9 +208,10 @@ const updateAttendance = async (user_id, access_in, res) => {
                     attendance.clock_out_time = currentTime;
                 }
             }
+            // storeAttendance();
         }
         await attendance.save();
-        // storeAttendance(); //for testing
+        storeAttendance(); //for testing
         console.log(attendance);
         return true;
     } catch (error) {
