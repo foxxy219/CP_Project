@@ -12,8 +12,9 @@ async function updatePinCode() {
     
     // Parallelize the database update operations using Promise.all
     await Promise.all(users.map(async (userCredential) => {
-      const secretKey = userCredential.secret_key; // Replace with your actual secret key attribute
+      const secretKey = userCredential.secret_key;
       const pinCode = generateTOTP(secretKey);
+      console.log(`User ${userCredential.user_id} pin code: ${pinCode}`);
       userCredential.pin_code = pinCode;
       await userCredential.save();
     }));
