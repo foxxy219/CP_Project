@@ -155,6 +155,35 @@ export async function getAllUserHardwareCredential(user_id) {
   }
 }
 
+export async function deleteUserByUserId(user_id) {
+  const token = localStorage.getItem('token');
+  console.log(token);
+  console.log('User ID:', user_id);
+  const body = {
+    user_id
+  }
+  const config = {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    }
+  };
+  try {
+    const response = await axios.post(API_ROUTES.admin.deleteUserByUserId, body, config);
+    if (response.status === 200) {
+      return response.data;
+    }
+    else {
+      console.error('Failed to delete users:', response.data.error);
+      return null;
+    }
+  }
+  catch (error) {
+    console.error('Error deleting users:', error);
+    return null;
+  }
+}
+
 export async function updateUserInfo(user_id, data) {
   const token = localStorage.getItem('token');
   console.log(token);

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Box, Button, useTheme } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { useNavigate } from 'react-router-dom';
-import { getCurrentUserFromToken, fetchUserData, getAllUserHardwareCredential, getAllUsers } from '../../utils/index';
+import { getCurrentUserFromToken, fetchUserData, getAllUserHardwareCredential, getAllUsers, deleteUserByUserId } from '../../utils/index';
 import { tokens } from '../../theme';
 import Header from '../components/Header';
 
@@ -38,8 +38,32 @@ const AllUserInfo = () => {
                 </Button>
             ),
         },
+        {
+            field: 'delete',
+            headerName: '',
+            flex: 1,
+            renderCell: (params) => (
+                <Button
+                    variant="contained"
+                    color="error"
+                    onClick={() => handleDelete(params.row)}
+                    style={{ marginLeft: '8px' }}
+                >
+                    Delete
+                </Button>
+            ),
+        },
         // Add more fields as needed
     ];
+
+    const handleDelete = async(user) => {
+        console.log('Deleting user:', user);
+        const deleteResult = await deleteUserByUserId(user.user_id);
+        console.log('Delete Result:', deleteResult);
+        //refresh page
+        window.location.reload();
+    };
+
     const handleUpdate = (user) => {
         // Implement your logic to handle the update, e.g., open a modal or navigate to an update page
         console.log('Updating user:', user);
